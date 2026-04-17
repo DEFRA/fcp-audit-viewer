@@ -57,7 +57,7 @@ describe('Context and cache', () => {
           assetPath: '/public/assets',
           breadcrumbs: [],
           getAssetPath: expect.any(Function),
-          serviceName: 'Find farm and land payment data',
+          serviceName: 'Audit Viewer',
           serviceUrl: '/',
         })
       })
@@ -100,7 +100,7 @@ describe('Context and cache', () => {
             assetPath: '/public/assets',
             breadcrumbs: [],
             getAssetPath: expect.any(Function),
-            serviceName: 'Find farm and land payment data',
+            serviceName: 'Audit Viewer',
             serviceUrl: '/'
           })
         })
@@ -171,7 +171,7 @@ describe('Context and cache', () => {
           assetPath: '/public/assets',
           breadcrumbs: [],
           getAssetPath: expect.any(Function),
-          serviceName: 'Find farm and land payment data',
+          serviceName: 'Audit Viewer',
           serviceUrl: '/',
         })
       })

@@ -39,7 +39,7 @@ describe('Start route', () => {
   test('Should render expected content', () => {
     expectPageTitle($, '')
     expectHeader($)
-    expectPageHeading($, 'Find farm and land payment data')
+    expectPageHeading($, 'Audit Viewer')
     expectFooter($)
   })
 })

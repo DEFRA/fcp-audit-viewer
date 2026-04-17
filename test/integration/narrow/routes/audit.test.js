@@ -21,7 +21,7 @@ describe('Audit route', () => {
 
     if (response) { return }
 
-    const options = getOptions('/audit', 'GET')
+    const options = getOptions('audit', 'GET')
 
     response = await server.inject(options)
     $ = cheerio.load(response.payload)
