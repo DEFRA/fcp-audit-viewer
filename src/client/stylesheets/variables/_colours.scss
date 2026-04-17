@@ -1,2 +1,29 @@
-// Example custom CSS variables
-$app-light-grey: #f8f8f8;
+@use "govuk-frontend" as *;
+
+.fca-text-colour-white {
+  color: govuk-colour('white') !important;
+}
+
+.fca-border-colour-light-grey {
+  border-color: govuk-colour('black', $variant: 'tint-95');
+}
+
+.fca-text-link-colour {
+  color: govuk-colour('blue');
+}
+
+.fca-text-colour-dark-grey {
+  color: govuk-colour('black', $variant: 'tint-25');
+}
+
+.fca-hr-colour-blue {
+  border-color: govuk-colour('blue')
+}
+
+.fca-bg-colour-light-grey {
+  background-color: govuk-colour('black', $variant: 'tint-95');
+}
+
+.fca-text-colour-black {
+  color: govuk-colour('black');
+}

@@ -1,5 +1,5 @@
-ARG PARENT_VERSION=3.0.5-node24.14.1
-ARG PORT=3000
+ARG PARENT_VERSION=2.10.0-node24.11.1
+ARG PORT=3006
 ARG PORT_DEBUG=9229
 
 FROM defradigital/node-development:${PARENT_VERSION} AS development
@@ -18,7 +18,7 @@ RUN npm install
 COPY --chown=node:node --chmod=755 . .
 RUN npm run build:frontend
 
-CMD [ "npm", "run", "docker:dev" ]
+CMD [ "npm", "run", "dev" ]
 
 FROM development AS production_build
 
@@ -36,13 +36,17 @@ ENV TZ="Europe/London"
 # CDP PLATFORM HEALTHCHECK REQUIREMENT
 USER root
 RUN apk add --no-cache curl
-USER node
 
-COPY --from=production_build /home/node/package*.json ./
-COPY --from=production_build /home/node/src ./src/
-COPY --from=production_build /home/node/.public/ ./.public/
+COPY --from=production_build --chown=root:root /home/node/package*.json ./
+COPY --from=production_build --chown=root:root /home/node/src ./src/
+COPY --from=production_build --chown=root:root /home/node/.public/ ./.public/
 
 RUN npm ci --omit=dev
+
+# Remove write permissions
+RUN chmod -R a-w /home/node
+
+USER node
 
 ARG PORT
 ENV PORT=${PORT}

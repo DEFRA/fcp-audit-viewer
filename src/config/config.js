@@ -1,12 +1,10 @@
 import convict from 'convict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-
 import convictFormatWithValidator from 'convict-format-with-validator'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const fourHoursMs = 14400000
 const oneWeekMs = 604800000
 
 const isProduction = process.env.NODE_ENV === 'production'
@@ -32,7 +30,7 @@ export const config = convict({
   port: {
     doc: 'The port to bind.',
     format: 'port',
-    default: 3000,
+    default: 3006,
     env: 'PORT'
   },
   staticCacheTimeout: {
@@ -44,7 +42,7 @@ export const config = convict({
   serviceName: {
     doc: 'Applications Service Name',
     format: String,
-    default: 'fcp-audit-viewer'
+    default: 'Audit Viewer'
   },
   root: {
     doc: 'Project root',
@@ -96,8 +94,7 @@ export const config = convict({
       format: Array,
       default: isProduction
         ? ['req.headers.authorization', 'req.headers.cookie', 'res.headers']
-        : [],
-      env: 'LOG_REDACT'
+        : []
     }
   },
   httpProxy: {
@@ -113,87 +110,11 @@ export const config = convict({
     default: isProduction,
     env: 'ENABLE_SECURE_CONTEXT'
   },
-  session: {
-    cache: {
-      engine: {
-        doc: 'backend cache is written to',
-        format: ['redis', 'memory'],
-        default: isProduction ? 'redis' : 'memory',
-        env: 'SESSION_CACHE_ENGINE'
-      },
-      name: {
-        doc: 'server side session cache name',
-        format: String,
-        default: 'session',
-        env: 'SESSION_CACHE_NAME'
-      },
-      ttl: {
-        doc: 'server side session cache ttl',
-        format: Number,
-        default: fourHoursMs,
-        env: 'SESSION_CACHE_TTL'
-      }
-    },
-    cookie: {
-      ttl: {
-        doc: 'Session cookie ttl',
-        format: Number,
-        default: fourHoursMs,
-        env: 'SESSION_COOKIE_TTL'
-      },
-      password: {
-        doc: 'session cookie password',
-        format: String,
-        default: 'the-password-must-be-at-least-32-characters-long',
-        env: 'SESSION_COOKIE_PASSWORD',
-        sensitive: true
-      },
-      secure: {
-        doc: 'set secure flag on cookie',
-        format: Boolean,
-        default: isProduction,
-        env: 'SESSION_COOKIE_SECURE'
-      }
-    }
-  },
-  redis: {
-    host: {
-      doc: 'Redis cache host',
-      format: String,
-      default: '127.0.0.1',
-      env: 'REDIS_HOST'
-    },
-    username: {
-      doc: 'Redis cache username',
-      format: String,
-      default: '',
-      env: 'REDIS_USERNAME'
-    },
-    password: {
-      doc: 'Redis cache password',
-      format: '*',
-      default: '',
-      sensitive: true,
-      env: 'REDIS_PASSWORD'
-    },
-    keyPrefix: {
-      doc: 'Redis cache key prefix name used to isolate the cached results across multiple clients',
-      format: String,
-      default: 'fcp-audit-viewer:',
-      env: 'REDIS_KEY_PREFIX'
-    },
-    useSingleInstanceCache: {
-      doc: 'Connect to a single instance of redis instead of a cluster.',
-      format: Boolean,
-      default: !isProduction,
-      env: 'USE_SINGLE_INSTANCE_CACHE'
-    },
-    useTLS: {
-      doc: 'Connect to redis using TLS',
-      format: Boolean,
-      default: isProduction,
-      env: 'REDIS_TLS'
-    }
+  isMetricsEnabled: {
+    doc: 'Enable metrics reporting',
+    format: Boolean,
+    default: isProduction,
+    env: 'ENABLE_METRICS'
   },
   nunjucks: {
     watch: {
@@ -214,7 +135,131 @@ export const config = convict({
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
     }
-  }
+  },
+  backend: {
+    endpoint: {
+      doc: 'Endpoint for fcp-audit',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'AUDIT_ENDPOINT'
+    },
+    path: {
+      doc: 'Path for fcp-audit endpoint',
+      format: String,
+      default: '/api/v1/audit',
+      env: 'AUDIT_PATH'
+    }
+  },
+  search: {
+    limit: {
+      doc: 'Maximum number of search results that can be shown on the results page',
+      format: 'nat',
+      default: 20
+    }
+  },
+  cookie: {
+    password: {
+      doc: 'The cookie password.',
+      format: String,
+      default: null,
+      env: 'COOKIE_PASSWORD'
+    },
+    secure: {
+      doc: 'set secure flag on cookie',
+      format: Boolean,
+      default: process.env.NODE_ENV === 'production',
+      env: 'SESSION_COOKIE_SECURE'
+    }
+  },
+  entra: {
+    wellKnownUrl: {
+      doc: 'The Entra well known URL.',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'ENTRA_WELL_KNOWN_URL'
+    },
+    clientId: {
+      doc: 'The Entra client ID.',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'ENTRA_CLIENT_ID'
+    },
+    clientSecret: {
+      doc: 'The Entra client secret.',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'ENTRA_CLIENT_SECRET'
+    },
+    redirectUrl: {
+      doc: 'The Entra redirect URl.',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'ENTRA_REDIRECT_URL'
+    },
+    signOutRedirectUrl: {
+      doc: 'The Entra sign out redirect URl.',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'ENTRA_SIGN_OUT_REDIRECT_URL'
+    },
+    refreshTokens: {
+      doc: 'True if Entra refresh tokens are enabled.',
+      format: Boolean,
+      default: true,
+      env: 'ENTRA_REFRESH_TOKENS'
+    }
+  },
+  redis: {
+    host: {
+      doc: 'The Redis cache host.',
+      format: String,
+      default: null,
+      env: 'REDIS_HOST'
+    },
+    username: {
+      doc: 'The Redis cache username.',
+      format: String,
+      default: '',
+      env: 'REDIS_USERNAME'
+    },
+    password: {
+      doc: 'The Redis cache password.',
+      format: '*',
+      default: process.env.NODE_ENV === 'production' ? null : undefined,
+      sensitive: true,
+      env: 'REDIS_PASSWORD'
+    },
+    keyPrefix: {
+      doc: 'Redis cache key prefix name used to isolate the cached results across multiple clients',
+      format: String,
+      default: 'fcp-audit-viewer:',
+      env: 'REDIS_KEY_PREFIX'
+    },
+    useSingleInstanceCache: {
+      doc: 'Connect to a single instance of redis instead of a cluster.',
+      format: Boolean,
+      default: !isProduction,
+      env: 'USE_SINGLE_INSTANCE_CACHE'
+    },
+    useTLS: {
+      doc: 'Connect to redis using TLS',
+      format: Boolean,
+      default: isProduction,
+      env: 'REDIS_TLS'
+    },
+    ttl: {
+      doc: 'The cache TTL.',
+      format: Number,
+      default: 1000 * 60 * 60 * 24,
+      env: 'REDIS_TTL'
+    }
+  },
 })
 
 config.validate({ allowed: 'strict' })

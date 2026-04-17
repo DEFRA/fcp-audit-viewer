@@ -1,0 +1,22 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds govuk-prose-scope">
+      <div class="govuk-body" data-testid="app-page-body">
+        <h1>{{ serviceName }}</h1>
+
+        <p>Audit Viewer</p>
+
+        <p>You can query and view audit events from the following farming services:</p>
+        <ul>
+          <li>Single Front Door</li>
+          <li>Grants Platform</li>
+          <li>Data Access Layer</li>
+        </ul>
+
+        <a class="govuk-link" href="/audit">View audit events</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
