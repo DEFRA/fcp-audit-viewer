@@ -6,11 +6,13 @@ import { withAuthRetry } from './with-auth-retry.js'
 export async function get (path) {
   const backendUrl = buildBackendUrl(path)
 
-  return requestPromise(
+  const { payload } = await requestPromise(
     backendUrl,
     withAuthRetry((token) => {
       const headers = token ? { Authorization: token } : {}
-      return Wreck.get(backendUrl, { headers })
+      return Wreck.get(backendUrl, { headers, json: true })
     })
   )
+
+  return payload
 }
