@@ -45,7 +45,7 @@ export const results = {
     }
 
     const queryString = new URLSearchParams(params).toString()
-    const response = await get('/audit/search?' + queryString)
+    const response = await get('/search?' + queryString)
 
     const currentPage = parseInt(page)
     const currentPageSize = parseInt(pageSize)
