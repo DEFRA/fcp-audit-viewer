@@ -14,7 +14,7 @@ export const audit = {
   },
   handler: async function (_request, h) {
     try {
-      const response = await get('/audit/summary')
+      const response = await get('/summary')
       return h.view('audit', { summary: response.data.summary })
     } catch (err) {
       logger.error('Failed to fetch audit summary', err)
