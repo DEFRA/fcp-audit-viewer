@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 import { vi, describe, beforeEach, test, expect } from 'vitest'
 
 const cryptoSpy = vi.spyOn(crypto, 'randomUUID')

@@ -1,4 +1,4 @@
-import { generateKeyPairSync } from 'crypto'
+import { generateKeyPairSync } from 'node:crypto'
 import { vi, describe, beforeEach, test, expect } from 'vitest'
 import Jwt from '@hapi/jwt'
 
