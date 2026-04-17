@@ -1,0 +1,151 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-l">Query builder</h1>
+
+      <form action="/results" method="GET">
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+            <h2 class="govuk-fieldset__heading">Event details</h2>
+          </legend>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="user">User</label>
+            <input class="govuk-input" id="user" name="user" type="text" value="{{ currentQuery.user if currentQuery.user }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="sessionid">Session ID</label>
+            <input class="govuk-input" id="sessionid" name="sessionid" type="text" value="{{ currentQuery.sessionid if currentQuery.sessionid }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="correlationid">Correlation ID</label>
+            <input class="govuk-input" id="correlationid" name="correlationid" type="text" value="{{ currentQuery.correlationid if currentQuery.correlationid }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="dateFrom">Date from</label>
+            <div class="govuk-hint">Format: YYYY-MM-DD</div>
+            <input class="govuk-input govuk-input--width-10" id="dateFrom" name="dateFrom" type="text" value="{{ currentQuery.dateFrom if currentQuery.dateFrom }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="dateTo">Date to</label>
+            <div class="govuk-hint">Format: YYYY-MM-DD</div>
+            <input class="govuk-input govuk-input--width-10" id="dateTo" name="dateTo" type="text" value="{{ currentQuery.dateTo if currentQuery.dateTo }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="environment">Environment</label>
+            <input class="govuk-input" id="environment" name="environment" type="text" value="{{ currentQuery.environment if currentQuery.environment }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="version">Version</label>
+            <input class="govuk-input govuk-input--width-10" id="version" name="version" type="text" value="{{ currentQuery.version if currentQuery.version }}">
+          </div>
+        </fieldset>
+
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+            <h2 class="govuk-fieldset__heading">Service details</h2>
+          </legend>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="application">Application</label>
+            <input class="govuk-input" id="application" name="application" type="text" value="{{ currentQuery.application if currentQuery.application }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="component">Component</label>
+            <input class="govuk-input" id="component" name="component" type="text" value="{{ currentQuery.component if currentQuery.component }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="ip">IP address</label>
+            <input class="govuk-input govuk-input--width-10" id="ip" name="ip" type="text" value="{{ currentQuery.ip if currentQuery.ip }}">
+          </div>
+        </fieldset>
+
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+            <h2 class="govuk-fieldset__heading">Audit data</h2>
+          </legend>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="auditStatus">Audit status</label>
+            <input class="govuk-input" id="auditStatus" name="auditStatus" type="text" value="{{ currentQuery.auditStatus if currentQuery.auditStatus }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="entityEntity">Entity</label>
+            <input class="govuk-input" id="entityEntity" name="entityEntity" type="text" value="{{ currentQuery.entityEntity if currentQuery.entityEntity }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="entityAction">Action</label>
+            <input class="govuk-input" id="entityAction" name="entityAction" type="text" value="{{ currentQuery.entityAction if currentQuery.entityAction }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="entityId">Entity ID</label>
+            <input class="govuk-input" id="entityId" name="entityId" type="text" value="{{ currentQuery.entityId if currentQuery.entityId }}">
+          </div>
+        </fieldset>
+
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+            <h2 class="govuk-fieldset__heading">Account identifiers</h2>
+          </legend>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="accountSbi">SBI</label>
+            <input class="govuk-input govuk-input--width-10" id="accountSbi" name="accountSbi" type="text" value="{{ currentQuery.accountSbi if currentQuery.accountSbi }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="accountFrn">FRN</label>
+            <input class="govuk-input govuk-input--width-10" id="accountFrn" name="accountFrn" type="text" value="{{ currentQuery.accountFrn if currentQuery.accountFrn }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="accountVendor">Vendor</label>
+            <input class="govuk-input" id="accountVendor" name="accountVendor" type="text" value="{{ currentQuery.accountVendor if currentQuery.accountVendor }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="accountOrganisationId">Organisation ID</label>
+            <input class="govuk-input" id="accountOrganisationId" name="accountOrganisationId" type="text" value="{{ currentQuery.accountOrganisationId if currentQuery.accountOrganisationId }}">
+          </div>
+        </fieldset>
+
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+            <h2 class="govuk-fieldset__heading">Custom properties</h2>
+          </legend>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="customField">Property name</label>
+            <div class="govuk-hint">Enter the name of a custom <code>audit.details</code> property</div>
+            <input class="govuk-input" id="customField" name="customField" type="text" value="{{ currentQuery.customField if currentQuery.customField }}">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="customValue">Property value</label>
+            <div class="govuk-hint">Enter the value to search for</div>
+            <input class="govuk-input" id="customValue" name="customValue" type="text" value="{{ currentQuery.customValue if currentQuery.customValue }}">
+          </div>
+        </fieldset>
+
+        <button type="submit" class="govuk-button">Search</button>
+      </form>
+
+      <p class="govuk-body">
+        <a href="/audit" class="govuk-link">Back to dashboard</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}
