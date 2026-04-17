@@ -1,0 +1,27 @@
+services:
+  fcp-audit-viewer:
+    ports:
+      - '3006:3006'
+      - '9006:9229'
+    networks:
+      - fcp-audit
+    depends_on:
+      redis:
+        condition: service_started
+
+  redis:
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --dir /data --save 5 1
+    networks:
+      - fcp-audit
+
+networks:
+  fcp-audit:
+    driver: bridge
+    name: fcp-audit
+
+volumes:
+  redis_data:
