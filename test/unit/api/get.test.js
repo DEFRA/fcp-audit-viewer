@@ -13,6 +13,14 @@ vi.mock('../../../src/common/helpers/logging/logging.js', () => ({
   })
 }))
 
+const { mockWithAuthRetry } = vi.hoisted(() => ({
+  mockWithAuthRetry: vi.fn((fn) => fn('Bearer mock-token'))
+}))
+
+vi.mock('../../../src/api/with-auth-retry.js', () => ({
+  withAuthRetry: mockWithAuthRetry
+}))
+
 const { createLogger } = await import('../../../src/common/helpers/logging/logger.js')
 const mockLogger = createLogger()
 
@@ -20,6 +28,9 @@ describe('get', () => {
   const route = '/__TEST_ROUTE__'
 
   beforeEach(() => {
+    vi.clearAllMocks()
+    mockWithAuthRetry.mockImplementation((fn) => fn('Bearer mock-token'))
+
     config.load({})
     config.validate({ allowed: 'strict' })
 
@@ -40,7 +51,24 @@ describe('get', () => {
 
     await get(route)
 
-    expect(mockGet).toHaveBeenCalledWith(`${endpoint}${path}${route}`)
+    expect(mockGet).toHaveBeenCalledWith(
+      `${endpoint}${path}${route}`,
+      { headers: { Authorization: 'Bearer mock-token' } }
+    )
+  })
+
+  test('should not include Authorization header when no token is available', async () => {
+    mockWithAuthRetry.mockImplementationOnce((fn) => fn(null))
+
+    const mockGet = vi.fn()
+    vi.spyOn(Wreck, 'get').mockImplementation(mockGet)
+
+    await get(route)
+
+    expect(mockGet).toHaveBeenCalledWith(
+      `${endpoint}${path}${route}`,
+      { headers: {} }
+    )
   })
 
   test('should handle error when request fails', async () => {
@@ -52,7 +80,6 @@ describe('get', () => {
 
     await expect(get(route)).rejects.toThrow()
 
-    expect(mockGet).toHaveBeenCalledWith(`${endpoint}${path}${route}`)
     expect(mockLoggerError).toHaveBeenCalled()
   })
 })
