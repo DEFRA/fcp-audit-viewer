@@ -46,28 +46,28 @@ describe('get', () => {
   })
 
   test('should use env variable to connect to backend service', async () => {
-    const mockGet = vi.fn()
+    const mockGet = vi.fn().mockResolvedValue({ payload: null })
     vi.spyOn(Wreck, 'get').mockImplementation(mockGet)
 
     await get(route)
 
     expect(mockGet).toHaveBeenCalledWith(
       `${endpoint}${path}${route}`,
-      { headers: { Authorization: 'Bearer mock-token' } }
+      { headers: { Authorization: 'Bearer mock-token' }, json: true }
     )
   })
 
   test('should not include Authorization header when no token is available', async () => {
     mockWithAuthRetry.mockImplementationOnce((fn) => fn(null))
 
-    const mockGet = vi.fn()
+    const mockGet = vi.fn().mockResolvedValue({ payload: null })
     vi.spyOn(Wreck, 'get').mockImplementation(mockGet)
 
     await get(route)
 
     expect(mockGet).toHaveBeenCalledWith(
       `${endpoint}${path}${route}`,
-      { headers: {} }
+      { headers: {}, json: true }
     )
   })
 
