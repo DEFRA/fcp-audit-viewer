@@ -27,7 +27,9 @@ function cloneBlankRow (container, index) {
   }
 
   const select = clone.querySelector('.condition-row__field-select')
-  if (select) select.name = `conditions[${index}][field]`
+  if (select) {
+    select.name = `conditions[${index}][field]`
+  }
 
   clone.dataset.rowIndex = String(index)
   clone.querySelectorAll('[id]').forEach((el) => {
