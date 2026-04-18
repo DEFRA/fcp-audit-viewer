@@ -92,4 +92,71 @@ describe('Results route', () => {
     const nextLink = $paginated('.govuk-pagination__next')
     expect(nextLink.length).toBeGreaterThan(0)
   })
+
+  test('Shows Previous pagination link when on page 2', async () => {
+    const paginatedMock = {
+      ...mockResponse,
+      data: { ...mockResponse.data },
+      meta: { page: 2, pageSize: 20, total: 50 }
+    }
+    mockGet.mockResolvedValueOnce(paginatedMock)
+
+    const page2Response = await server.inject({
+      method: 'GET',
+      url: '/results?page=2',
+      auth: { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
+    })
+    const $page2 = cheerio.load(page2Response.payload)
+
+    const prevLink = $page2('.govuk-pagination__prev')
+    expect(prevLink.length).toBeGreaterThan(0)
+  })
+
+  test('No previous pagination link on page 1', () => {
+    const prevLink = $(' .govuk-pagination__prev')
+    expect(prevLink.length).toBe(0)
+  })
+
+  test('Renders "No results found" when events array is empty', async () => {
+    const emptyMock = {
+      data: { events: [] },
+      meta: { page: 1, pageSize: 20, total: 0 }
+    }
+    mockGet.mockResolvedValueOnce(emptyMock)
+
+    const emptyResponse = await server.inject(getOptions('results', 'GET'))
+    expect(emptyResponse.payload).toContain('No results found.')
+  })
+
+  test('Back link is present in the page', () => {
+    const backLink = $(' .govuk-back-link')
+    expect(backLink.length).toBeGreaterThan(0)
+  })
+
+  test('customField condition is resolved to details.<customField> before calling API', async () => {
+    mockGet.mockResolvedValueOnce(mockResponse)
+
+    await server.inject({
+      method: 'GET',
+      url: '/results?conditions%5B0%5D%5BcustomField%5D=caseid&conditions%5B0%5D%5Boperator%5D=eq&conditions%5B0%5D%5Bvalue%5D=foo',
+      auth: { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
+    })
+
+    const calledPath = mockGet.mock.calls[mockGet.mock.calls.length - 1][0]
+    // qs.stringify URL-encodes brackets, so compare on the unambiguous value portion
+    expect(calledPath).toContain('details.caseid')
+  })
+
+  test('Conditions missing required fields are stripped before calling API', async () => {
+    mockGet.mockResolvedValueOnce(mockResponse)
+
+    await server.inject({
+      method: 'GET',
+      url: '/results?conditions%5B0%5D%5Bfield%5D=application&conditions%5B0%5D%5Boperator%5D=eq',
+      auth: { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
+    })
+
+    const calledPath = mockGet.mock.calls[mockGet.mock.calls.length - 1][0]
+    expect(calledPath).not.toContain('application')
+  })
 })

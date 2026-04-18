@@ -1,16 +1,30 @@
 import { describe, beforeEach, test, expect, vi } from 'vitest'
-import { initAll } from 'govuk-frontend'
+
+const { mockInitAll, mockInitQueryBuilder } = vi.hoisted(() => ({
+  mockInitAll: vi.fn(),
+  mockInitQueryBuilder: vi.fn()
+}))
 
 vi.mock('govuk-frontend', () => ({
-  initAll: vi.fn()
+  initAll: mockInitAll
 }))
+
+vi.mock('../../../../src/client/javascripts/query.js', () => ({
+  initQueryBuilder: mockInitQueryBuilder
+}))
+
 describe('application', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
-    await vi.importActual('../../../../src/client/javascripts/application.js')
+    vi.resetModules()
+    await import('../../../../src/client/javascripts/application.js')
   })
 
   test('should call init() on all custom client-side javascript modules', () => {
-    expect(initAll).toHaveBeenCalled()
+    expect(mockInitAll).toHaveBeenCalled()
+  })
+
+  test('should call initQueryBuilder()', () => {
+    expect(mockInitQueryBuilder).toHaveBeenCalled()
   })
 })
