@@ -48,32 +48,69 @@ describe('Query route', () => {
     expect(form.attr('method').toLowerCase()).toBe('get')
   })
 
-  test('Input with name="application" is present', () => {
-    const input = $('input[name="application"]')
+  test('Condition row field select is present', () => {
+    const select = $('select[id^="conditions-"][id$="-field"]')
+    expect(select.length).toBeGreaterThan(0)
+  })
+
+  test('Condition row operator select is present', () => {
+    const select = $('select[id^="conditions-"][id$="-operator"]')
+    expect(select.length).toBeGreaterThan(0)
+  })
+
+  test('Condition row value input is present', () => {
+    const input = $('input[id^="conditions-"][id$="-value"]')
     expect(input.length).toBeGreaterThan(0)
   })
 
-  test('Input with name="component" is present', () => {
-    const input = $('input[name="component"]')
-    expect(input.length).toBeGreaterThan(0)
+  test('Field select includes application option', () => {
+    const option = $('option[value="application"]')
+    expect(option.length).toBeGreaterThan(0)
   })
 
-  test('Input with name="customField" is present', () => {
-    const input = $('input[name="customField"]')
-    expect(input.length).toBeGreaterThan(0)
+  test('Field select includes audit.entities.entity option', () => {
+    const option = $('option[value="audit.entities.entity"]')
+    expect(option.length).toBeGreaterThan(0)
   })
 
-  test('Input with name="customValue" is present', () => {
-    const input = $('input[name="customValue"]')
-    expect(input.length).toBeGreaterThan(0)
+  test('Operator select includes equal to option', () => {
+    const option = $('option[value="eq"]')
+    expect(option.length).toBeGreaterThan(0)
   })
 
-  test('Pre-populates application input from query param', async () => {
-    const options = getOptions('query', 'GET', { application: 'FCP001' })
-    const prePopResponse = await server.inject(options)
-    const $prePopulated = cheerio.load(prePopResponse.payload)
+  test('Operator select includes notContains option', () => {
+    const option = $('option[value="notContains"]')
+    expect(option.length).toBeGreaterThan(0)
+  })
 
-    const input = $prePopulated('input[name="application"]')
+  test('Add condition link is present', () => {
+    const link = $('#add-condition')
+    expect(link.length).toBe(1)
+  })
+
+  test('Pre-populates condition field from query param', async () => {
+    const url = '/query?conditions[0][field]=application&conditions[0][operator]=eq&conditions[0][value]=FCP001'
+    const prePopResponse = await server.inject({
+      method: 'GET',
+      url,
+      auth: { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
+    })
+    const $pp = cheerio.load(prePopResponse.payload)
+
+    const select = $pp('select[id="conditions-0-field"]')
+    expect(select.find('option[value="application"]').attr('selected')).toBeDefined()
+  })
+
+  test('Pre-populates condition value from query param', async () => {
+    const url = '/query?conditions[0][field]=application&conditions[0][operator]=eq&conditions[0][value]=FCP001'
+    const prePopResponse = await server.inject({
+      method: 'GET',
+      url,
+      auth: { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
+    })
+    const $pp = cheerio.load(prePopResponse.payload)
+
+    const input = $pp('input[id="conditions-0-value"]')
     expect(input.attr('value')).toBe('FCP001')
   })
 })

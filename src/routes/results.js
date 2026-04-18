@@ -1,9 +1,10 @@
+import qs from 'qs'
 import { get } from '../api/get.js'
 
-function buildPaginationItems (currentPage, totalPages, baseParams) {
+function buildPaginationItems (currentPage, totalPages, baseConditions, basePageSize) {
   if (totalPages <= 1) return []
 
-  const pageUrl = (p) => '/results?' + new URLSearchParams({ ...baseParams, page: p }).toString()
+  const pageUrl = (p) => '/results?' + qs.stringify({ conditions: baseConditions, pageSize: basePageSize, page: p })
 
   const visiblePages = new Set([1, totalPages])
   for (let i = currentPage - 1; i <= currentPage + 1; i++) {
@@ -28,29 +29,6 @@ function buildPaginationItems (currentPage, totalPages, baseParams) {
   return items
 }
 
-const filterParams = [
-  'user',
-  'sessionid',
-  'correlationid',
-  'environment',
-  'version',
-  'application',
-  'component',
-  'ip',
-  'auditStatus',
-  'entityEntity',
-  'entityAction',
-  'entityId',
-  'accountSbi',
-  'accountFrn',
-  'accountVendor',
-  'accountOrganisationId',
-  'customField',
-  'customValue',
-  'dateFrom',
-  'dateTo'
-]
-
 export const results = {
   method: 'GET',
   path: '/results',
@@ -62,46 +40,49 @@ export const results = {
   },
   handler: async function (request, h) {
     const { page = 1, pageSize = 20 } = request.query
+    let conditions = request.query.conditions || []
 
-    const params = { page, pageSize }
+    // no-JS custom property fallback: conditions[N][customField] -> details.<customField>
+    // Strip customField from all conditions before forwarding to the API
+    conditions = conditions.map((c) => {
+      const { customField, field, ...rest } = c
+      const resolvedField = (!field && customField) ? `details.${customField}` : field
+      return { field: resolvedField, ...rest }
+    }).filter((c) => c.field && c.operator && c.value !== undefined)
 
-    for (const param of filterParams) {
-      const value = request.query[param]
-      if (value !== null && value !== undefined) {
-        params[param] = value
-      }
-    }
-
-    const queryString = new URLSearchParams(params).toString()
+    const queryString = qs.stringify({ conditions, page, pageSize })
     const response = await get('/search?' + queryString)
 
     const currentPage = parseInt(page)
     const currentPageSize = parseInt(pageSize)
     const total = response.meta ? response.meta.total : 0
-    const baseParams = { ...params }
-    delete baseParams.page
 
     const totalPages = total > 0 ? Math.ceil(total / currentPageSize) : 1
 
     const prevUrl = currentPage > 1
-      ? '/results?' + new URLSearchParams({ ...baseParams, page: currentPage - 1 }).toString()
+      ? '/results?' + qs.stringify({ conditions, pageSize: currentPageSize, page: currentPage - 1 })
       : null
 
     const nextUrl = currentPage * currentPageSize < total
-      ? '/results?' + new URLSearchParams({ ...baseParams, page: currentPage + 1 }).toString()
+      ? '/results?' + qs.stringify({ conditions, pageSize: currentPageSize, page: currentPage + 1 })
       : null
 
-    const pages = buildPaginationItems(currentPage, totalPages, baseParams)
+    const pages = buildPaginationItems(currentPage, totalPages, conditions, currentPageSize)
 
     const referrer = request.info.referrer
-    const backUrl = (referrer && !referrer.includes('/results'))
-      ? referrer
-      : '/query?' + new URLSearchParams(baseParams).toString()
+    let backUrl = '/'
+    if (referrer) {
+      try {
+        backUrl = new URL(referrer).pathname
+      } catch {
+        backUrl = '/'
+      }
+    }
 
     return h.view('results', {
       events: response.data.events,
       meta: response.meta,
-      currentQuery: request.query,
+      conditions,
       prevUrl,
       nextUrl,
       pages,

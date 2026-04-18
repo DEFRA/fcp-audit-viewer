@@ -1,146 +1,101 @@
 {% extends "layout.njk" %}
 
 {% block content %}
+  <a href="/" class="govuk-back-link">Back</a>
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <h1 class="govuk-heading-l">Query builder</h1>
 
-      <form action="/results" method="GET">
-        <fieldset class="govuk-fieldset">
-          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-            <h2 class="govuk-fieldset__heading">Event details</h2>
-          </legend>
+      <form action="/results" method="GET" id="query-form">
 
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="user">User</label>
-            <input class="govuk-input" id="user" name="user" type="text" value="{{ currentQuery.user if currentQuery.user }}">
-          </div>
+        <div id="condition-rows">
+          {% for condition in conditions %}
+            {% set rowIndex = loop.index0 %}
+            {% set isCustom = condition.customField and not condition.field %}
+            <div class="condition-row" data-row-index="{{ rowIndex }}">
+              <div class="condition-row__inputs">
 
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="sessionid">Session ID</label>
-            <input class="govuk-input" id="sessionid" name="sessionid" type="text" value="{{ currentQuery.sessionid if currentQuery.sessionid }}">
-          </div>
+                <div class="condition-row__field-col">
+                  <div class="govuk-form-group condition-row__field-group{{ ' app-hidden' if isCustom }}">
+                    <label class="govuk-label" for="conditions-{{ rowIndex }}-field">Property</label>
+                    <select class="govuk-select condition-row__field-select" id="conditions-{{ rowIndex }}-field" name="conditions[{{ rowIndex }}][field]">
+                      <option value="">-- select --</option>
+                      <optgroup label="Event">
+                        <option value="user" {% if condition.field === 'user' %}selected{% endif %}>User</option>
+                        <option value="sessionid" {% if condition.field === 'sessionid' %}selected{% endif %}>Session ID</option>
+                        <option value="correlationid" {% if condition.field === 'correlationid' %}selected{% endif %}>Correlation ID</option>
+                        <option value="datetime" {% if condition.field === 'datetime' %}selected{% endif %}>Date/time</option>
+                        <option value="environment" {% if condition.field === 'environment' %}selected{% endif %}>Environment</option>
+                        <option value="version" {% if condition.field === 'version' %}selected{% endif %}>Version</option>
+                        <option value="application" {% if condition.field === 'application' %}selected{% endif %}>Application</option>
+                        <option value="component" {% if condition.field === 'component' %}selected{% endif %}>Component</option>
+                        <option value="ip" {% if condition.field === 'ip' %}selected{% endif %}>IP address</option>
+                        <option value="audit.status" {% if condition.field === 'audit.status' %}selected{% endif %}>Audit status</option>
+                      </optgroup>
+                      <optgroup label="Entity">
+                        <option value="audit.entities.entity" {% if condition.field === 'audit.entities.entity' %}selected{% endif %}>Entity type</option>
+                        <option value="audit.entities.action" {% if condition.field === 'audit.entities.action' %}selected{% endif %}>Entity action</option>
+                        <option value="audit.entities.entityid" {% if condition.field === 'audit.entities.entityid' %}selected{% endif %}>Entity ID</option>
+                      </optgroup>
+                      <optgroup label="Account">
+                        <option value="audit.accounts.sbi" {% if condition.field === 'audit.accounts.sbi' %}selected{% endif %}>SBI</option>
+                        <option value="audit.accounts.frn" {% if condition.field === 'audit.accounts.frn' %}selected{% endif %}>FRN</option>
+                        <option value="audit.accounts.vendor" {% if condition.field === 'audit.accounts.vendor' %}selected{% endif %}>Vendor</option>
+                        <option value="audit.accounts.trader" {% if condition.field === 'audit.accounts.trader' %}selected{% endif %}>Trader</option>
+                        <option value="audit.accounts.organisationId" {% if condition.field === 'audit.accounts.organisationId' %}selected{% endif %}>Organisation ID</option>
+                        <option value="audit.accounts.crn" {% if condition.field === 'audit.accounts.crn' %}selected{% endif %}>CRN</option>
+                        <option value="audit.accounts.personId" {% if condition.field === 'audit.accounts.personId' %}selected{% endif %}>Person ID</option>
+                      </optgroup>
+                    </select>
+                  </div>
 
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="correlationid">Correlation ID</label>
-            <input class="govuk-input" id="correlationid" name="correlationid" type="text" value="{{ currentQuery.correlationid if currentQuery.correlationid }}">
-          </div>
+                  <div class="govuk-form-group condition-row__custom-group{{ '' if isCustom else ' app-hidden' }}">
+                    <label class="govuk-label" for="conditions-{{ rowIndex }}-customField">Custom details property</label>
+                    <input class="govuk-input condition-row__custom-input" id="conditions-{{ rowIndex }}-customField" name="conditions[{{ rowIndex }}][customField]" type="text" value="{{ condition.customField if condition.customField }}">
+                  </div>
+                </div>
 
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="dateFrom">Date from</label>
-            <div class="govuk-hint">Format: YYYY-MM-DD</div>
-            <input class="govuk-input govuk-input--width-10" id="dateFrom" name="dateFrom" type="text" value="{{ currentQuery.dateFrom if currentQuery.dateFrom }}">
-          </div>
+                <div class="condition-row__operator-col">
+                  <div class="govuk-form-group">
+                    <label class="govuk-label" for="conditions-{{ rowIndex }}-operator">Condition</label>
+                    <select class="govuk-select" id="conditions-{{ rowIndex }}-operator" name="conditions[{{ rowIndex }}][operator]">
+                      <option value="eq" {% if condition.operator === 'eq' or not condition.operator %}selected{% endif %}>Equal to</option>
+                      <option value="ne" {% if condition.operator === 'ne' %}selected{% endif %}>Not equal to</option>
+                      <option value="lt" {% if condition.operator === 'lt' %}selected{% endif %}>Less than</option>
+                      <option value="gt" {% if condition.operator === 'gt' %}selected{% endif %}>Greater than</option>
+                      <option value="contains" {% if condition.operator === 'contains' %}selected{% endif %}>Contains</option>
+                      <option value="notContains" {% if condition.operator === 'notContains' %}selected{% endif %}>Does not contain</option>
+                    </select>
+                  </div>
+                </div>
 
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="dateTo">Date to</label>
-            <div class="govuk-hint">Format: YYYY-MM-DD</div>
-            <input class="govuk-input govuk-input--width-10" id="dateTo" name="dateTo" type="text" value="{{ currentQuery.dateTo if currentQuery.dateTo }}">
-          </div>
+                <div class="condition-row__value-col">
+                  <div class="govuk-form-group">
+                    <label class="govuk-label" for="conditions-{{ rowIndex }}-value">Value</label>
+                    <input class="govuk-input" id="conditions-{{ rowIndex }}-value" name="conditions[{{ rowIndex }}][value]" type="text" value="{{ condition.value if condition.value }}">
+                  </div>
+                </div>
 
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="environment">Environment</label>
-            <input class="govuk-input" id="environment" name="environment" type="text" value="{{ currentQuery.environment if currentQuery.environment }}">
-          </div>
+                <div class="condition-row__actions-col">
+                  <a href="#" class="govuk-link govuk-body-s condition-row__delete{% if loop.length <= 1 %} app-hidden{% endif %}">Delete row</a>
+                </div>
 
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="version">Version</label>
-            <input class="govuk-input govuk-input--width-10" id="version" name="version" type="text" value="{{ currentQuery.version if currentQuery.version }}">
-          </div>
-        </fieldset>
+              </div>
 
-        <fieldset class="govuk-fieldset">
-          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-            <h2 class="govuk-fieldset__heading">Service details</h2>
-          </legend>
+              <div class="condition-row__toggles">
+                <a href="#" class="govuk-link govuk-body-s condition-row__use-custom{{ ' app-hidden' if isCustom }}">Use custom property</a>
+                <a href="#" class="govuk-link govuk-body-s condition-row__use-standard{{ '' if isCustom else ' app-hidden' }}">Use standard property</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
 
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="application">Application</label>
-            <input class="govuk-input" id="application" name="application" type="text" value="{{ currentQuery.application if currentQuery.application }}">
-          </div>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="component">Component</label>
-            <input class="govuk-input" id="component" name="component" type="text" value="{{ currentQuery.component if currentQuery.component }}">
-          </div>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="ip">IP address</label>
-            <input class="govuk-input govuk-input--width-10" id="ip" name="ip" type="text" value="{{ currentQuery.ip if currentQuery.ip }}">
-          </div>
-        </fieldset>
-
-        <fieldset class="govuk-fieldset">
-          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-            <h2 class="govuk-fieldset__heading">Audit data</h2>
-          </legend>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="auditStatus">Audit status</label>
-            <input class="govuk-input" id="auditStatus" name="auditStatus" type="text" value="{{ currentQuery.auditStatus if currentQuery.auditStatus }}">
-          </div>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="entityEntity">Entity</label>
-            <input class="govuk-input" id="entityEntity" name="entityEntity" type="text" value="{{ currentQuery.entityEntity if currentQuery.entityEntity }}">
-          </div>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="entityAction">Action</label>
-            <input class="govuk-input" id="entityAction" name="entityAction" type="text" value="{{ currentQuery.entityAction if currentQuery.entityAction }}">
-          </div>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="entityId">Entity ID</label>
-            <input class="govuk-input" id="entityId" name="entityId" type="text" value="{{ currentQuery.entityId if currentQuery.entityId }}">
-          </div>
-        </fieldset>
-
-        <fieldset class="govuk-fieldset">
-          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-            <h2 class="govuk-fieldset__heading">Account identifiers</h2>
-          </legend>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="accountSbi">SBI</label>
-            <input class="govuk-input govuk-input--width-10" id="accountSbi" name="accountSbi" type="text" value="{{ currentQuery.accountSbi if currentQuery.accountSbi }}">
-          </div>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="accountFrn">FRN</label>
-            <input class="govuk-input govuk-input--width-10" id="accountFrn" name="accountFrn" type="text" value="{{ currentQuery.accountFrn if currentQuery.accountFrn }}">
-          </div>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="accountVendor">Vendor</label>
-            <input class="govuk-input" id="accountVendor" name="accountVendor" type="text" value="{{ currentQuery.accountVendor if currentQuery.accountVendor }}">
-          </div>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="accountOrganisationId">Organisation ID</label>
-            <input class="govuk-input" id="accountOrganisationId" name="accountOrganisationId" type="text" value="{{ currentQuery.accountOrganisationId if currentQuery.accountOrganisationId }}">
-          </div>
-        </fieldset>
-
-        <fieldset class="govuk-fieldset">
-          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-            <h2 class="govuk-fieldset__heading">Custom properties</h2>
-          </legend>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="customField">Property name</label>
-            <div class="govuk-hint">Enter the name of a custom <code>audit.details</code> property</div>
-            <input class="govuk-input" id="customField" name="customField" type="text" value="{{ currentQuery.customField if currentQuery.customField }}">
-          </div>
-
-          <div class="govuk-form-group">
-            <label class="govuk-label" for="customValue">Property value</label>
-            <div class="govuk-hint">Enter the value to search for</div>
-            <input class="govuk-input" id="customValue" name="customValue" type="text" value="{{ currentQuery.customValue if currentQuery.customValue }}">
-          </div>
-        </fieldset>
+        <p class="govuk-body">
+          <a href="#" class="govuk-link" id="add-condition">Add condition</a>
+        </p>
 
         <button type="submit" class="govuk-button">Search</button>
+
       </form>
 
       <p class="govuk-body">

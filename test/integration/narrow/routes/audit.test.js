@@ -96,8 +96,8 @@ describe('Audit route', () => {
     expect(link.first().text()).toContain('View')
   })
 
-  test('application view link points to /results with filter', () => {
-    const link = $('a[href*="/results?application=FCP001"]')
+  test('application view link points to /results with conditions', () => {
+    const link = $('a[href*="/results?conditions"]')
     expect(link.length).toBeGreaterThan(0)
   })
 
@@ -106,4 +106,3 @@ describe('Audit route', () => {
     expect(link.text().trim()).toBe('Query builder')
   })
 })
-

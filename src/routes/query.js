@@ -8,6 +8,7 @@ export const query = {
     }
   },
   handler: function (request, h) {
-    return h.view('query', { currentQuery: request.query })
+    const conditions = request.query.conditions
+    return h.view('query', { conditions: (conditions && conditions.length) ? conditions : [{}] })
   }
 }

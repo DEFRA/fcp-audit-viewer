@@ -46,7 +46,6 @@
       <div class="govuk-grid-row">
         {% for application in summary.applications | sort(true, false, "total") %}
           <div class="govuk-grid-column-full">
-            {% set applicationHref = "/results?application=" + (application.application | urlencode) %}
             {% set appRows = [
               {
                 key: { text: "Total events" },
@@ -54,7 +53,7 @@
                 actions: {
                   items: [
                     {
-                      href: applicationHref,
+                      href: application.href,
                       text: "View",
                       visuallyHiddenText: "all events for " + application.application
                     }
@@ -63,14 +62,13 @@
               }
             ] %}
             {% for component in application.components %}
-              {% set componentHref = applicationHref + "&component=" + (component.component | urlencode) %}
               {% set _ = appRows.push({
                 key: { text: component.component },
                 value: { text: component.total, classes: "govuk-!-text-align-right" },
                 actions: {
                   items: [
                     {
-                      href: componentHref,
+                      href: component.href,
                       text: "View",
                       visuallyHiddenText: "events for " + component.component + " in " + application.application
                     }

@@ -2,6 +2,7 @@ import path from 'node:path'
 import Hapi from '@hapi/hapi'
 import Scooter from '@hapi/scooter'
 import Joi from 'joi'
+import qs from 'qs'
 import Bell from '@hapi/bell'
 import Cookie from '@hapi/cookie'
 import { Engine as CatboxRedis } from '@hapi/catbox-redis'
@@ -48,6 +49,9 @@ export async function createServer () {
     },
     router: {
       stripTrailingSlash: true
+    },
+    query: {
+      parser: (params) => qs.parse(params)
     },
     state: {
       strictHeader: false
