@@ -2,7 +2,6 @@ import { describe, beforeAll, afterAll, test, expect, vi } from 'vitest'
 import http2 from 'node:http2'
 import * as cheerio from 'cheerio'
 import '../helpers/setup-server-mocks.js'
-import { getOptions } from '../../../utils/helpers.js'
 import { expectPageTitle } from '../../../utils/page-title-expect.js'
 import { expectHeader } from '../../../utils/header-expect.js'
 import { expectFooter } from '../../../utils/footer-expect.js'
@@ -47,9 +46,17 @@ describe('Audit route', () => {
 
     if (response) { return }
 
-    const options = getOptions('audit', 'GET')
-
-    response = await server.inject(options)
+    response = await server.inject({
+      method: 'GET',
+      url: '/',
+      auth: {
+        strategy: 'session',
+        credentials: {
+          scope: ['Audit.View'],
+          sessionId: 'test-session-id'
+        }
+      }
+    })
     $ = cheerio.load(response.payload)
   })
 
@@ -83,12 +90,13 @@ describe('Audit route', () => {
     expect(response.payload).toContain('FCP001')
   })
 
-  test('total link points to /results', () => {
+  test('view link points to /results', () => {
     const link = $('a[href="/results"]')
-    expect(link.text().trim()).toBe('42')
+    expect(link.length).toBeGreaterThan(0)
+    expect(link.first().text()).toContain('View')
   })
 
-  test('application link points to /results with filter', () => {
+  test('application view link points to /results with filter', () => {
     const link = $('a[href*="/results?application=FCP001"]')
     expect(link.length).toBeGreaterThan(0)
   })

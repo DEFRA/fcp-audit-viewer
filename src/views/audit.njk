@@ -1,62 +1,92 @@
 {% extends "layout.njk" %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
 
 {% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full govuk-prose-scope">
-      <div class="govuk-body" data-testid="app-page-body">
-        <h1 class="govuk-heading-l">Audit events</h1>
+  <div data-testid="app-page-body">
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+        <h1 class="govuk-heading-l">Farming audit events</h1>
 
         {% if summary is null or summary is not defined %}
           <p class="govuk-body">Summary data unavailable.</p>
         {% else %}
-          <p class="govuk-body govuk-!-font-size-48">
-            Total events:
-            {% if summary.total > 0 %}
-              <a href="/results" class="govuk-link">{{ summary.total }}</a>
-            {% else %}
-              {{ summary.total }}
-            {% endif %}
-          </p>
-
-          {% for application in summary.applications %}
-            <table class="govuk-table">
-              <caption class="govuk-table__caption govuk-table__caption--m">
-                {{ application.application }}
-                &mdash;
-                {% if application.total > 0 %}
-                  <a href="/results?application={{ application.application | urlencode }}" class="govuk-link">{{ application.total }}</a>
-                {% else %}
-                  {{ application.total }}
-                {% endif %}
-              </caption>
-              <thead class="govuk-table__head">
-                <tr class="govuk-table__row">
-                  <th scope="col" class="govuk-table__header">Component</th>
-                  <th scope="col" class="govuk-table__header">Count</th>
-                </tr>
-              </thead>
-              <tbody class="govuk-table__body">
-                {% for component in application.components %}
-                  <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">{{ component.component }}</td>
-                    <td class="govuk-table__cell">
-                      {% if component.total > 0 %}
-                        <a href="/results?application={{ application.application | urlencode }}&component={{ component.component | urlencode }}" class="govuk-link">{{ component.total }}</a>
-                      {% else %}
-                        {{ component.total }}
-                      {% endif %}
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          {% endfor %}
-
           <p class="govuk-body">
             <a href="/query" class="govuk-link">Query builder</a>
           </p>
         {% endif %}
       </div>
     </div>
+
+    {% if summary is not null and summary is defined %}
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+          {{ govukSummaryList({
+            card: {
+              title: { text: "Summary" }
+            },
+            rows: [
+              {
+                key: { text: "Total events" },
+                value: { text: summary.total, classes: "govuk-!-text-align-right" },
+                actions: {
+                  items: [
+                    {
+                      href: "/results",
+                      text: "View",
+                      visuallyHiddenText: "all audit events"
+                    }
+                  ]
+                }
+              }
+            ]
+          }) }}
+        </div>
+      </div>
+
+      <div class="govuk-grid-row">
+        {% for application in summary.applications | sort(true, false, "total") %}
+          <div class="govuk-grid-column-full">
+            {% set applicationHref = "/results?application=" + (application.application | urlencode) %}
+            {% set appRows = [
+              {
+                key: { text: "Total events" },
+                value: { text: application.total, classes: "govuk-!-text-align-right" },
+                actions: {
+                  items: [
+                    {
+                      href: applicationHref,
+                      text: "View",
+                      visuallyHiddenText: "all events for " + application.application
+                    }
+                  ]
+                }
+              }
+            ] %}
+            {% for component in application.components %}
+              {% set componentHref = applicationHref + "&component=" + (component.component | urlencode) %}
+              {% set _ = appRows.push({
+                key: { text: component.component },
+                value: { text: component.total, classes: "govuk-!-text-align-right" },
+                actions: {
+                  items: [
+                    {
+                      href: componentHref,
+                      text: "View",
+                      visuallyHiddenText: "events for " + component.component + " in " + application.application
+                    }
+                  ]
+                }
+              }) %}
+            {% endfor %}
+            {{ govukSummaryList({
+              card: {
+                title: { text: application.application }
+              },
+              rows: appRows
+            }) }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
   </div>
 {% endblock %}
