@@ -159,4 +159,44 @@ describe('Results route', () => {
     const calledPath = mockGet.mock.calls[mockGet.mock.calls.length - 1][0]
     expect(calledPath).not.toContain('application')
   })
+
+  test('renders error state when API throws', async () => {
+    mockGet.mockRejectedValueOnce(new Error('Network failure'))
+
+    const errorResponse = await server.inject(getOptions('results', 'GET'))
+
+    expect(errorResponse.statusCode).toBe(httpConstants.HTTP_STATUS_OK)
+    expect(errorResponse.payload).toContain('No results found.')
+  })
+
+  test('backUrl falls back to / when referrer is an invalid URL', async () => {
+    mockGet.mockResolvedValueOnce(mockResponse)
+
+    const refResponse = await server.inject({
+      method: 'GET',
+      url: '/results',
+      headers: { referer: 'not-a-valid-url' },
+      auth: { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
+    })
+
+    const $ref = cheerio.load(refResponse.payload)
+    expect($ref('.govuk-back-link').attr('href')).toBe('/')
+  })
+
+  test('pagination includes ellipsis when current page is far from edges', async () => {
+    const manyPagesMock = {
+      ...mockResponse,
+      meta: { page: 5, pageSize: 20, total: 300 }
+    }
+    mockGet.mockResolvedValueOnce(manyPagesMock)
+
+    const manyPagesResponse = await server.inject({
+      method: 'GET',
+      url: '/results?page=5&pageSize=20',
+      auth: { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
+    })
+
+    expect(manyPagesResponse.statusCode).toBe(httpConstants.HTTP_STATUS_OK)
+    expect(manyPagesResponse.payload).toContain('govuk-pagination__item--ellipsis')
+  })
 })

@@ -101,4 +101,28 @@ describe('getServiceToken', () => {
     mockWreckPost.mockRejectedValue(new Error('network error'))
     await expect(getServiceToken()).rejects.toThrow('network error')
   })
+
+  test('should throw when response status is not 200', async () => {
+    mockWreckPost.mockResolvedValue({
+      res: { statusCode: 400 },
+      payload: { error: 'invalid_client' }
+    })
+    await expect(getServiceToken()).rejects.toThrow('Failed to acquire service token: invalid_client')
+  })
+
+  test('should throw when token_type is missing from successful response', async () => {
+    mockWreckPost.mockResolvedValue({
+      res: { statusCode: 200 },
+      payload: { access_token: 'some-token' }
+    })
+    await expect(getServiceToken()).rejects.toThrow('Failed to acquire service token: 200')
+  })
+
+  test('should throw when access_token is missing from successful response', async () => {
+    mockWreckPost.mockResolvedValue({
+      res: { statusCode: 200 },
+      payload: { token_type: 'Bearer' }
+    })
+    await expect(getServiceToken()).rejects.toThrow('Failed to acquire service token: 200')
+  })
 })

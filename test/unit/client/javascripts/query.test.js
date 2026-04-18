@@ -8,12 +8,14 @@ function buildSingleRowHtml (index) {
   <div class="condition-row__inputs">
     <div class="condition-row__field-col">
       <div class="govuk-form-group condition-row__field-group">
+        <label class="govuk-label" for="conditions-${index}-field">Property</label>
         <select class="govuk-select condition-row__field-select" id="conditions-${index}-field" name="conditions[${index}][field]">
           <option value="">-- select --</option>
           <option value="application">Application</option>
         </select>
       </div>
       <div class="govuk-form-group condition-row__custom-group app-hidden">
+        <label class="govuk-label" for="conditions-${index}-customField">Custom property</label>
         <input class="govuk-input condition-row__custom-input" id="conditions-${index}-customField" name="conditions[${index}][customField]" type="text">
       </div>
     </div>
@@ -207,6 +209,19 @@ describe('initQueryBuilder', () => {
 
       const select = document.querySelector('.condition-row__field-select')
       expect(select.name).toBe('')
+    })
+  })
+
+  describe('click event not on a condition row', () => {
+    test('clicking on the container outside any row does nothing', () => {
+      setupDom(1)
+      initQueryBuilder()
+
+      const container = document.getElementById('condition-rows')
+      container.click()
+
+      const rows = document.querySelectorAll('.condition-row')
+      expect(rows.length).toBe(1)
     })
   })
 

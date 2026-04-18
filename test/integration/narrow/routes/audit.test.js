@@ -1,4 +1,4 @@
-import { describe, beforeAll, afterAll, test, expect, vi } from 'vitest'
+import { describe, beforeAll, beforeEach, afterAll, afterEach, test, expect, vi } from 'vitest'
 import http2 from 'node:http2'
 import * as cheerio from 'cheerio'
 import '../helpers/setup-server-mocks.js'
@@ -104,5 +104,51 @@ describe('Audit route', () => {
   test('Query builder link present', () => {
     const link = $('a[href="/query"]')
     expect(link.text().trim()).toBe('Query builder')
+  })
+})
+
+describe('Audit route - error and null summary scenarios', () => {
+  let server
+
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    server = await createServer()
+    await server.initialize()
+  })
+
+  afterEach(async () => {
+    await server.stop({ timeout: 0 })
+  })
+
+  test('renders summary unavailable when API throws', async () => {
+    mockGet.mockRejectedValue(new Error('Backend unavailable'))
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/',
+      auth: {
+        strategy: 'session',
+        credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' }
+      }
+    })
+
+    expect(response.statusCode).toBe(httpConstants.HTTP_STATUS_OK)
+    expect(response.payload).toContain('Summary data unavailable')
+  })
+
+  test('renders without crash when summary has no applications', async () => {
+    mockGet.mockResolvedValue({ data: { summary: null } })
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/',
+      auth: {
+        strategy: 'session',
+        credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' }
+      }
+    })
+
+    expect(response.statusCode).toBe(httpConstants.HTTP_STATUS_OK)
+    expect(response.payload).toContain('Summary data unavailable')
   })
 })
