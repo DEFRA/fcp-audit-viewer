@@ -53,8 +53,8 @@ export const results = {
     const queryString = qs.stringify({ conditions, page, pageSize })
     const response = await get('/search?' + queryString)
 
-    const currentPage = parseInt(page)
-    const currentPageSize = parseInt(pageSize)
+    const currentPage = Number.parseInt(page)
+    const currentPageSize = Number.parseInt(pageSize)
     const total = response.meta ? response.meta.total : 0
 
     const totalPages = total > 0 ? Math.ceil(total / currentPageSize) : 1
