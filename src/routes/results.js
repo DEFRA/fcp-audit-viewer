@@ -93,6 +93,11 @@ export const results = {
 
     const pages = buildPaginationItems(currentPage, totalPages, baseParams)
 
+    const referrer = request.info.referrer
+    const backUrl = (referrer && !referrer.includes('/results'))
+      ? referrer
+      : '/query?' + new URLSearchParams(baseParams).toString()
+
     return h.view('results', {
       events: response.data.events,
       meta: response.meta,
@@ -100,7 +105,8 @@ export const results = {
       prevUrl,
       nextUrl,
       pages,
-      totalPages
+      totalPages,
+      backUrl
     })
   }
 }
