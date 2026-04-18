@@ -1,0 +1,38 @@
+{% extends "layout.njk" %}
+{% from "govuk/components/pagination/macro.njk" import govukPagination %}
+{% from "macros/event-card.njk" import eventCard %}
+
+{% block content %}
+  <a href="{{ backUrl }}" class="govuk-back-link">Back</a>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-l">Search results</h1>
+
+      {% if meta %}
+        {% set rangeStart = meta.page * meta.pageSize - meta.pageSize + 1 %}
+        {% set rangeEnd = meta.page * meta.pageSize %}
+        {% if rangeEnd > meta.total %}
+          {% set rangeEnd = meta.total %}
+        {% endif %}
+        <p class="govuk-body">Showing {{ rangeStart }}–{{ rangeEnd }} of {{ meta.total }} results</p>
+      {% endif %}
+
+      {% if events and events.length %}
+        {% for event in events %}
+          {{ eventCard(event) }}
+        {% endfor %}
+      {% else %}
+        <p class="govuk-body">No results found.</p>
+      {% endif %}
+
+      {% if pages and pages.length %}
+        {{ govukPagination({
+          previous: { href: prevUrl } if prevUrl,
+          next: { href: nextUrl } if nextUrl,
+          items: pages
+        }) }}
+      {% endif %}
+
+    </div>
+  </div>
+{% endblock %}

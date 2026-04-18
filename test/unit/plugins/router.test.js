@@ -9,12 +9,16 @@ vi.mock('../../../src/routes/auth.js', () => ({
   auth: { method: 'GET', path: '/auth' }
 }))
 
-vi.mock('../../../src/routes/start.js', () => ({
-  start: { method: 'GET', path: '/start' }
+vi.mock('../../../src/routes/audit.js', () => ({
+  audit: { method: 'GET', path: '/' }
 }))
 
-vi.mock('../../../src/routes/audit.js', () => ({
-  audit: { method: 'GET', path: '/audit' }
+vi.mock('../../../src/routes/results.js', () => ({
+  results: { method: 'GET', path: '/results' }
+}))
+
+vi.mock('../../../src/routes/query.js', () => ({
+  query: { method: 'GET', path: '/query' }
 }))
 
 vi.mock('../../../src/common/helpers/serve-static-files.js', () => ({
@@ -67,19 +71,11 @@ describe('router', () => {
     )
   })
 
-  test('should register start route', async () => {
-    await router.plugin.register(mockServer)
-
-    expect(mockServer.route).toHaveBeenCalledWith(
-      expect.objectContaining({ path: '/start' })
-    )
-  })
-
   test('should register audit route', async () => {
     await router.plugin.register(mockServer)
 
     expect(mockServer.route).toHaveBeenCalledWith(
-      expect.objectContaining({ path: '/audit' })
+      expect.objectContaining({ path: '/' })
     )
   })
 
@@ -95,6 +91,6 @@ describe('router', () => {
   test('should register expected number of routes', async () => {
     await router.plugin.register(mockServer)
 
-    expect(mockServer.route.mock.calls.length).toBe(4)
+    expect(mockServer.route.mock.calls.length).toBe(5)
   })
 })

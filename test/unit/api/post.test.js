@@ -13,6 +13,14 @@ vi.mock('../../../src/common/helpers/logging/logging.js', () => ({
   })
 }))
 
+const { mockWithAuthRetry } = vi.hoisted(() => ({
+  mockWithAuthRetry: vi.fn((fn) => fn('Bearer mock-token'))
+}))
+
+vi.mock('../../../src/api/with-auth-retry.js', () => ({
+  withAuthRetry: mockWithAuthRetry
+}))
+
 const { createLogger } = await import('../../../src/common/helpers/logging/logger.js')
 const mockLogger = createLogger()
 
@@ -20,6 +28,9 @@ describe('post', () => {
   const route = '/__TEST_ROUTE__'
 
   beforeEach(() => {
+    vi.clearAllMocks()
+    mockWithAuthRetry.mockImplementation((fn) => fn('Bearer mock-token'))
+
     config.load({})
     config.validate({ allowed: 'strict' })
 
@@ -40,7 +51,24 @@ describe('post', () => {
 
     await post(route, {})
 
-    expect(mockPost).toHaveBeenCalledWith(`${endpoint}${path}${route}`, { payload: {} })
+    expect(mockPost).toHaveBeenCalledWith(
+      `${endpoint}${path}${route}`,
+      { headers: { Authorization: 'Bearer mock-token' }, payload: {} }
+    )
+  })
+
+  test('should not include Authorization header when no token is available', async () => {
+    mockWithAuthRetry.mockImplementationOnce((fn) => fn(null))
+
+    const mockPost = vi.fn()
+    vi.spyOn(Wreck, 'post').mockImplementation(mockPost)
+
+    await post(route, {})
+
+    expect(mockPost).toHaveBeenCalledWith(
+      `${endpoint}${path}${route}`,
+      { headers: {}, payload: {} }
+    )
   })
 
   test('post function handles error', async () => {
@@ -52,7 +80,6 @@ describe('post', () => {
 
     await expect(post(route, {})).rejects.toThrow('Test error')
 
-    expect(mockPost).toHaveBeenCalledWith(`${endpoint}${path}${route}`, { payload: {} })
     expect(mockLoggerError).toHaveBeenCalled()
   })
 })

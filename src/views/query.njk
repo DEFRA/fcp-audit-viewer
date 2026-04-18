@@ -1,0 +1,103 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+  <a href="/" class="govuk-back-link">Back</a>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-l">Query builder</h1>
+
+      <form action="/results" method="GET" id="query-form">
+
+        <div id="condition-rows">
+          {% for condition in conditions %}
+            {% set rowIndex = loop.index0 %}
+            {% set isCustom = condition.customField and not condition.field %}
+            <div class="condition-row" data-row-index="{{ rowIndex }}">
+              <div class="condition-row__inputs">
+
+                <div class="condition-row__field-col">
+                  <div class="govuk-form-group condition-row__field-group{{ ' app-hidden' if isCustom }}">
+                    <label class="govuk-label" for="conditions-{{ rowIndex }}-field">Property</label>
+                    <select class="govuk-select condition-row__field-select" id="conditions-{{ rowIndex }}-field" name="conditions[{{ rowIndex }}][field]">
+                      <option value="">-- select --</option>
+                      <optgroup label="Event">
+                        <option value="user" {% if condition.field === 'user' %}selected{% endif %}>User</option>
+                        <option value="sessionid" {% if condition.field === 'sessionid' %}selected{% endif %}>Session ID</option>
+                        <option value="correlationid" {% if condition.field === 'correlationid' %}selected{% endif %}>Correlation ID</option>
+                        <option value="datetime" {% if condition.field === 'datetime' %}selected{% endif %}>Date/time</option>
+                        <option value="environment" {% if condition.field === 'environment' %}selected{% endif %}>Environment</option>
+                        <option value="version" {% if condition.field === 'version' %}selected{% endif %}>Version</option>
+                        <option value="application" {% if condition.field === 'application' %}selected{% endif %}>Application</option>
+                        <option value="component" {% if condition.field === 'component' %}selected{% endif %}>Component</option>
+                        <option value="ip" {% if condition.field === 'ip' %}selected{% endif %}>IP address</option>
+                        <option value="audit.status" {% if condition.field === 'audit.status' %}selected{% endif %}>Audit status</option>
+                      </optgroup>
+                      <optgroup label="Entity">
+                        <option value="audit.entities.entity" {% if condition.field === 'audit.entities.entity' %}selected{% endif %}>Entity type</option>
+                        <option value="audit.entities.action" {% if condition.field === 'audit.entities.action' %}selected{% endif %}>Entity action</option>
+                        <option value="audit.entities.entityid" {% if condition.field === 'audit.entities.entityid' %}selected{% endif %}>Entity ID</option>
+                      </optgroup>
+                      <optgroup label="Account">
+                        <option value="audit.accounts.sbi" {% if condition.field === 'audit.accounts.sbi' %}selected{% endif %}>SBI</option>
+                        <option value="audit.accounts.frn" {% if condition.field === 'audit.accounts.frn' %}selected{% endif %}>FRN</option>
+                        <option value="audit.accounts.vendor" {% if condition.field === 'audit.accounts.vendor' %}selected{% endif %}>Vendor</option>
+                        <option value="audit.accounts.trader" {% if condition.field === 'audit.accounts.trader' %}selected{% endif %}>Trader</option>
+                        <option value="audit.accounts.organisationId" {% if condition.field === 'audit.accounts.organisationId' %}selected{% endif %}>Organisation ID</option>
+                        <option value="audit.accounts.crn" {% if condition.field === 'audit.accounts.crn' %}selected{% endif %}>CRN</option>
+                        <option value="audit.accounts.personId" {% if condition.field === 'audit.accounts.personId' %}selected{% endif %}>Person ID</option>
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  <div class="govuk-form-group condition-row__custom-group{{ '' if isCustom else ' app-hidden' }}">
+                    <label class="govuk-label" for="conditions-{{ rowIndex }}-customField">Custom details property</label>
+                    <input class="govuk-input condition-row__custom-input" id="conditions-{{ rowIndex }}-customField" name="conditions[{{ rowIndex }}][customField]" type="text" value="{{ condition.customField if condition.customField }}">
+                  </div>
+                </div>
+
+                <div class="condition-row__operator-col">
+                  <div class="govuk-form-group">
+                    <label class="govuk-label" for="conditions-{{ rowIndex }}-operator">Condition</label>
+                    <select class="govuk-select" id="conditions-{{ rowIndex }}-operator" name="conditions[{{ rowIndex }}][operator]">
+                      <option value="eq" {% if condition.operator === 'eq' or not condition.operator %}selected{% endif %}>Equal to</option>
+                      <option value="ne" {% if condition.operator === 'ne' %}selected{% endif %}>Not equal to</option>
+                      <option value="lt" {% if condition.operator === 'lt' %}selected{% endif %}>Less than</option>
+                      <option value="gt" {% if condition.operator === 'gt' %}selected{% endif %}>Greater than</option>
+                      <option value="contains" {% if condition.operator === 'contains' %}selected{% endif %}>Contains</option>
+                      <option value="notContains" {% if condition.operator === 'notContains' %}selected{% endif %}>Does not contain</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="condition-row__value-col">
+                  <div class="govuk-form-group">
+                    <label class="govuk-label" for="conditions-{{ rowIndex }}-value">Value</label>
+                    <input class="govuk-input" id="conditions-{{ rowIndex }}-value" name="conditions[{{ rowIndex }}][value]" type="text" value="{{ condition.value if condition.value }}">
+                  </div>
+                </div>
+
+                <div class="condition-row__actions-col">
+                  <a href="#" class="govuk-link govuk-body-s condition-row__delete{% if loop.length <= 1 %} app-hidden{% endif %}">Delete row</a>
+                </div>
+
+              </div>
+
+              <div class="condition-row__toggles">
+                <a href="#" class="govuk-link govuk-body-s condition-row__use-custom{{ ' app-hidden' if isCustom }}">Use custom property</a>
+                <a href="#" class="govuk-link govuk-body-s condition-row__use-standard{{ '' if isCustom else ' app-hidden' }}">Use standard property</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <p class="govuk-body">
+          <a href="#" class="govuk-link" id="add-condition">Add condition</a>
+        </p>
+
+        <button type="submit" class="govuk-button">Search</button>
+
+      </form>
+
+    </div>
+  </div>
+{% endblock %}

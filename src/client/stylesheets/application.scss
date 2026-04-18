@@ -1,1 +1,40 @@
 @use "govuk-frontend";
+
+.condition-row {
+  margin-bottom: 20px;
+
+  &__inputs {
+    display: flex;
+    align-items: flex-end;
+    gap: 15px;
+
+    .govuk-form-group {
+      margin-bottom: 0;
+    }
+  }
+
+  &__field-col,
+  &__operator-col,
+  &__value-col {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__actions-col {
+    flex: 0 0 auto;
+  }
+
+  &__toggles {
+    margin-top: 5px;
+  }
+}
+
+.app-hidden {
+  display: none !important;
+}
+
+.app-summary-card__title-wrapper--flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

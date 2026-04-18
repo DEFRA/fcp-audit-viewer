@@ -48,3 +48,24 @@ export const nunjucksConfig = {
 Object.entries(globals).forEach(([name, global]) => {
   nunjucksEnvironment.addGlobal(name, global)
 })
+
+nunjucksEnvironment.addFilter('titleCase', (value) => {
+  if (!value) {
+    return ''
+  }
+  return String(value)
+    .replaceAll('-', ' ')
+    .replaceAll(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+})
+
+nunjucksEnvironment.addFilter('formatDate', (value) => {
+  if (!value) {
+    return ''
+  }
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) {
+    return value
+  }
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${pad(d.getUTCDate())}-${pad(d.getUTCMonth() + 1)}-${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`
+})

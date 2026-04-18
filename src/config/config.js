@@ -194,6 +194,13 @@ export const config = convict({
       default: null,
       env: 'ENTRA_CLIENT_SECRET'
     },
+    tenantId: {
+      doc: 'The Entra tenant ID for service-to-service token acquisition.',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'ENTRA_TENANT_ID'
+    },
     redirectUrl: {
       doc: 'The Entra redirect URl.',
       format: String,

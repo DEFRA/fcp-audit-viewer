@@ -1,11 +1,90 @@
 {% extends "layout.njk" %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
 
 {% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds govuk-prose-scope">
-      <div class="govuk-body" data-testid="app-page-body">
-        <h2>Audit events</h2>
+  <div data-testid="app-page-body">
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+        <h1 class="govuk-heading-l">Farming audit events</h1>
+
+        {% if summary is null or summary is not defined %}
+          <p class="govuk-body">Summary data unavailable.</p>
+        {% else %}
+          <p class="govuk-body">
+            <a href="/query" class="govuk-link">Query builder</a>
+          </p>
+        {% endif %}
       </div>
     </div>
+
+    {% if summary is not null and summary is defined %}
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+          {{ govukSummaryList({
+            card: {
+              title: { text: "Summary" }
+            },
+            rows: [
+              {
+                key: { text: "Total events" },
+                value: { text: summary.total, classes: "govuk-!-text-align-right" },
+                actions: {
+                  items: [
+                    {
+                      href: "/results",
+                      text: "View",
+                      visuallyHiddenText: "all audit events"
+                    }
+                  ]
+                }
+              }
+            ]
+          }) }}
+        </div>
+      </div>
+
+      <div class="govuk-grid-row">
+        {% for application in summary.applications | sort(true, false, "total") %}
+          <div class="govuk-grid-column-full">
+            {% set appRows = [
+              {
+                key: { text: "Total events" },
+                value: { text: application.total, classes: "govuk-!-text-align-right" },
+                actions: {
+                  items: [
+                    {
+                      href: application.href,
+                      text: "View",
+                      visuallyHiddenText: "all events for " + application.application
+                    }
+                  ]
+                }
+              }
+            ] %}
+            {% for component in application.components %}
+              {% set _ = appRows.push({
+                key: { text: component.component },
+                value: { text: component.total, classes: "govuk-!-text-align-right" },
+                actions: {
+                  items: [
+                    {
+                      href: component.href,
+                      text: "View",
+                      visuallyHiddenText: "events for " + component.component + " in " + application.application
+                    }
+                  ]
+                }
+              }) %}
+            {% endfor %}
+            {{ govukSummaryList({
+              card: {
+                title: { text: application.application }
+              },
+              rows: appRows
+            }) }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
   </div>
 {% endblock %}

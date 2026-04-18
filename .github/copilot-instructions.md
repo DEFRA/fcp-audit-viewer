@@ -190,7 +190,7 @@ const authCredentials = {
 
 const response = await server.inject({
   method: 'GET',
-  url: '/audit',
+  url: '/',
   auth: { strategy: 'entra', credentials: authCredentials }
 })
 ```

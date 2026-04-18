@@ -1,0 +1,110 @@
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% macro eventCard(event) %}
+  {% set entityRows = [] %}
+  {% if event.audit and event.audit.entities %}
+    {% for entity in event.audit.entities %}
+      {% if entity.action === 'created' %}
+        {% set tagColour = 'green' %}
+      {% elif entity.action === 'deleted' %}
+        {% set tagColour = 'red' %}
+      {% elif entity.action === 'updated' %}
+        {% set tagColour = 'yellow' %}
+      {% elif entity.action === 'read' %}
+        {% set tagColour = 'purple' %}
+      {% else %}
+        {% set tagColour = 'blue' %}
+      {% endif %}
+      {% set _ = entityRows.push([
+        { text: entity.entity | titleCase },
+        { text: entity.entityid },
+        { html: '<strong class="govuk-tag govuk-tag--' + tagColour + '">' + (entity.action | titleCase) + '</strong>' }
+      ]) %}
+    {% endfor %}
+  {% endif %}
+
+  {% set detailRows = [] %}
+  {% if event.user %}
+    {% set _ = detailRows.push({ key: { text: "User" }, value: { text: event.user } }) %}
+  {% endif %}
+  {% if event.sessionid %}
+    {% set _ = detailRows.push({ key: { text: "Session ID" }, value: { text: event.sessionid } }) %}
+  {% endif %}
+  {% if event.correlationid %}
+    {% set _ = detailRows.push({ key: { text: "Correlation ID" }, value: { text: event.correlationid } }) %}
+  {% endif %}
+  {% if event.datetime %}
+    {% set _ = detailRows.push({ key: { text: "Datetime" }, value: { text: event.datetime } }) %}
+  {% endif %}
+  {% if event.environment %}
+    {% set _ = detailRows.push({ key: { text: "Environment" }, value: { text: event.environment } }) %}
+  {% endif %}
+  {% if event.version %}
+    {% set _ = detailRows.push({ key: { text: "Version" }, value: { text: event.version } }) %}
+  {% endif %}
+  {% if event.ip %}
+    {% set _ = detailRows.push({ key: { text: "IP" }, value: { text: event.ip } }) %}
+  {% endif %}
+  {% if event.audit and event.audit.status %}
+    {% set statusLower = event.audit.status | lower %}
+    {% if statusLower === 'success' %}
+      {% set statusColour = 'green' %}
+    {% elif statusLower === 'failure' %}
+      {% set statusColour = 'red' %}
+    {% else %}
+      {% set statusColour = 'grey' %}
+    {% endif %}
+    {% set _ = detailRows.push({
+      key: { text: "Status" },
+      value: { html: '<strong class="govuk-tag govuk-tag--' + statusColour + '">' + (event.audit.status | titleCase) + '</strong>' }
+    }) %}
+  {% endif %}
+  {% if event.audit and event.audit.accounts %}
+    {% for key, value in event.audit.accounts %}
+      {% if value !== null and value !== undefined %}
+        {% set _ = detailRows.push({ key: { text: key }, value: { text: value } }) %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  {% if event.audit and event.audit.details %}
+    {% for key, value in event.audit.details %}
+      {% if value is mapping %}
+        {% set _ = detailRows.push({ key: { text: key }, value: { html: '<pre class="govuk-body-s">' + (value | dump) + '</pre>' } }) %}
+      {% else %}
+        {% set _ = detailRows.push({ key: { text: key }, value: { text: value } }) %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% set detailsHtml %}
+    {{ govukSummaryList({ rows: detailRows }) }}
+  {% endset %}
+
+  <div class="govuk-summary-card">
+    <div class="govuk-summary-card__title-wrapper app-summary-card__title-wrapper--flex">
+      <h2 class="govuk-summary-card__title">{{ event.application }}</h2>
+      <span class="govuk-body govuk-!-margin-bottom-0">{{ event.datetime | formatDate }}</span>
+    </div>
+    <div class="govuk-summary-card__content">
+      {% if entityRows.length %}
+        {{ govukTable({
+          caption: event.component,
+          captionClasses: "govuk-table__caption--s",
+          head: [
+            { text: "Entity", classes: "govuk-!-width-one-quarter" },
+            { text: "ID", classes: "govuk-!-width-one-half" },
+            { text: "Action", classes: "govuk-!-width-one-quarter" }
+          ],
+          rows: entityRows
+        }) }}
+      {% endif %}
+      {{ govukDetails({
+        summaryText: "View full event",
+        html: detailsHtml
+      }) }}
+    </div>
+  </div>
+{% endmacro %}
