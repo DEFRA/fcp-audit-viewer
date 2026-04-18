@@ -28,6 +28,7 @@ describe('getServiceToken', () => {
       }
     })
     mockWreckPost.mockResolvedValue({
+      res: { statusCode: 200 },
       payload: { token_type: 'Bearer', access_token: 'mock-access-token' }
     })
   })

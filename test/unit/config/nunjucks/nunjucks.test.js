@@ -56,7 +56,7 @@ describe('nunjucks formatDate filter', () => {
     const date = new Date('2025-12-01T12:51:41.000Z')
     const d = date
     const pad = (n) => String(n).padStart(2, '0')
-    const expected = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+    const expected = `${pad(d.getUTCDate())}-${pad(d.getUTCMonth() + 1)}-${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`
     expect(formatDate('2025-12-01T12:51:41.000Z')).toBe(expected)
   })
 
@@ -80,7 +80,7 @@ describe('nunjucks formatDate filter', () => {
     const value = formatDate('2025-01-05T08:03:07.000Z')
     const d = new Date('2025-01-05T08:03:07.000Z')
     const pad = (n) => String(n).padStart(2, '0')
-    const expected = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+    const expected = `${pad(d.getUTCDate())}-${pad(d.getUTCMonth() + 1)}-${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`
     expect(value).toBe(expected)
   })
 })

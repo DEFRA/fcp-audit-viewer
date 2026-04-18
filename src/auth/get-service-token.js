@@ -17,7 +17,7 @@ export async function getServiceToken () {
     scope: `${clientId}/.default`
   })
 
-  const { payload } = await Wreck.post(
+  const { res, payload } = await Wreck.post(
     `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
     {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -25,6 +25,10 @@ export async function getServiceToken () {
       json: true
     }
   )
+
+  if (res.statusCode !== 200 || !payload.token_type || !payload.access_token) {
+    throw new Error(`Failed to acquire service token: ${payload.error ?? res.statusCode}`)
+  }
 
   return `${payload.token_type} ${payload.access_token}`
 }

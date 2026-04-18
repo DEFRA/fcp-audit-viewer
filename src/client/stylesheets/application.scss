@@ -32,3 +32,9 @@
 .app-hidden {
   display: none !important;
 }
+
+.app-summary-card__title-wrapper--flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

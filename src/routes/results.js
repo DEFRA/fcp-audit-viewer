@@ -1,5 +1,10 @@
+import Joi from 'joi'
 import qs from 'qs'
+import { createLogger } from '../common/helpers/logging/logger.js'
 import { get } from '../api/get.js'
+import { conditionSchema } from '../common/helpers/condition-schema.js'
+
+const logger = createLogger()
 
 function buildPaginationItems (currentPage, totalPages, baseConditions, basePageSize) {
   if (totalPages <= 1) {
@@ -20,11 +25,10 @@ function buildPaginationItems (currentPage, totalPages, baseConditions, basePage
 
   for (let i = 0; i < sorted.length; i++) {
     if (i > 0 && sorted[i] - sorted[i - 1] > 1) {
-      items.push({ type: 'ellipsis' })
+      items.push({ ellipsis: true })
     }
     items.push({
-      type: 'number',
-      page: sorted[i],
+      number: sorted[i],
       href: pageUrl(sorted[i]),
       current: sorted[i] === currentPage
     })
@@ -40,11 +44,18 @@ export const results = {
     auth: {
       strategy: 'session',
       scope: ['Audit.View']
+    },
+    validate: {
+      query: Joi.object({
+        page: Joi.number().integer().min(1).default(1),
+        pageSize: Joi.number().integer().min(1).max(100).default(20),
+        conditions: Joi.array().items(conditionSchema).default([])
+      })
     }
   },
   handler: async function (request, h) {
-    const { page = 1, pageSize = 20 } = request.query
-    let conditions = request.query.conditions || []
+    const { page, pageSize } = request.query
+    let conditions = request.query.conditions
 
     // no-JS custom property fallback: conditions[N][customField] -> details.<customField>
     // Strip customField from all conditions before forwarding to the API
@@ -54,44 +65,55 @@ export const results = {
       return { field: resolvedField, ...rest }
     }).filter((c) => c.field && c.operator && c.value !== undefined)
 
-    const queryString = qs.stringify({ conditions, page, pageSize })
-    const response = await get('/search?' + queryString)
+    try {
+      const queryString = qs.stringify({ conditions, page, pageSize })
+      const response = await get('/search?' + queryString)
 
-    const currentPage = Number.parseInt(page)
-    const currentPageSize = Number.parseInt(pageSize)
-    const total = response.meta ? response.meta.total : 0
+      const total = response?.meta?.total ?? 0
+      const totalPages = total > 0 ? Math.ceil(total / pageSize) : 1
 
-    const totalPages = total > 0 ? Math.ceil(total / currentPageSize) : 1
+      const prevUrl = page > 1
+        ? '/results?' + qs.stringify({ conditions, pageSize, page: page - 1 })
+        : null
 
-    const prevUrl = currentPage > 1
-      ? '/results?' + qs.stringify({ conditions, pageSize: currentPageSize, page: currentPage - 1 })
-      : null
+      const nextUrl = page * pageSize < total
+        ? '/results?' + qs.stringify({ conditions, pageSize, page: page + 1 })
+        : null
 
-    const nextUrl = currentPage * currentPageSize < total
-      ? '/results?' + qs.stringify({ conditions, pageSize: currentPageSize, page: currentPage + 1 })
-      : null
+      const pages = buildPaginationItems(page, totalPages, conditions, pageSize)
 
-    const pages = buildPaginationItems(currentPage, totalPages, conditions, currentPageSize)
-
-    const referrer = request.info.referrer
-    let backUrl = '/'
-    if (referrer) {
-      try {
-        backUrl = new URL(referrer).pathname
-      } catch {
-        backUrl = '/'
+      const referrer = request.info.referrer
+      let backUrl = '/'
+      if (referrer) {
+        try {
+          backUrl = new URL(referrer).pathname
+        } catch {
+          backUrl = '/'
+        }
       }
-    }
 
-    return h.view('results', {
-      events: response.data.events,
-      meta: response.meta,
-      conditions,
-      prevUrl,
-      nextUrl,
-      pages,
-      totalPages,
-      backUrl
-    })
+      return h.view('results', {
+        events: response?.data?.events ?? [],
+        meta: response?.meta ?? null,
+        conditions,
+        prevUrl,
+        nextUrl,
+        pages,
+        totalPages,
+        backUrl
+      })
+    } catch (err) {
+      logger.error('Failed to fetch search results', err)
+      return h.view('results', {
+        events: [],
+        meta: null,
+        conditions,
+        prevUrl: null,
+        nextUrl: null,
+        pages: [],
+        totalPages: 1,
+        backUrl: '/'
+      })
+    }
   }
 }

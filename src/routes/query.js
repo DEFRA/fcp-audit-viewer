@@ -1,3 +1,6 @@
+import Joi from 'joi'
+import { conditionSchema } from '../common/helpers/condition-schema.js'
+
 export const query = {
   method: 'GET',
   path: '/query',
@@ -5,6 +8,11 @@ export const query = {
     auth: {
       strategy: 'session',
       scope: ['Audit.View']
+    },
+    validate: {
+      query: Joi.object({
+        conditions: Joi.array().items(conditionSchema).optional()
+      })
     }
   },
   handler: function (request, h) {

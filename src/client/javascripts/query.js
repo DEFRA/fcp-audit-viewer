@@ -1,75 +1,46 @@
-function buildRowHtml (index) {
-  return `
-<div class="condition-row" data-row-index="${index}">
-  <div class="condition-row__inputs">
-    <div class="condition-row__field-col">
-      <div class="govuk-form-group condition-row__field-group">
-        <label class="govuk-label" for="conditions-${index}-field">Property</label>
-        <select class="govuk-select condition-row__field-select" id="conditions-${index}-field" name="conditions[${index}][field]">
-          <option value="">-- select --</option>
-          <optgroup label="Event">
-            <option value="user">User</option>
-            <option value="sessionid">Session ID</option>
-            <option value="correlationid">Correlation ID</option>
-            <option value="datetime">Date/time</option>
-            <option value="environment">Environment</option>
-            <option value="version">Version</option>
-            <option value="application">Application</option>
-            <option value="component">Component</option>
-            <option value="ip">IP address</option>
-          </optgroup>
-          <optgroup label="Audit">
-            <option value="audit.status">Audit status</option>
-          </optgroup>
-          <optgroup label="Entity">
-            <option value="audit.entities.entity">Entity type</option>
-            <option value="audit.entities.action">Entity action</option>
-            <option value="audit.entities.entityid">Entity ID</option>
-          </optgroup>
-          <optgroup label="Account">
-            <option value="audit.accounts.sbi">SBI</option>
-            <option value="audit.accounts.frn">FRN</option>
-            <option value="audit.accounts.vendor">Vendor</option>
-            <option value="audit.accounts.trader">Trader</option>
-            <option value="audit.accounts.organisationId">Organisation ID</option>
-            <option value="audit.accounts.crn">CRN</option>
-            <option value="audit.accounts.personId">Person ID</option>
-          </optgroup>
-        </select>
-      </div>
-      <div class="govuk-form-group condition-row__custom-group app-hidden">
-        <label class="govuk-label" for="conditions-${index}-customField">Custom details property</label>
-        <input class="govuk-input condition-row__custom-input" id="conditions-${index}-customField" name="conditions[${index}][customField]" type="text">
-      </div>
-    </div>
-    <div class="condition-row__operator-col">
-      <div class="govuk-form-group">
-        <label class="govuk-label" for="conditions-${index}-operator">Condition</label>
-        <select class="govuk-select" id="conditions-${index}-operator" name="conditions[${index}][operator]">
-          <option value="eq" selected>Equal to</option>
-          <option value="ne">Not equal to</option>
-          <option value="lt">Less than</option>
-          <option value="gt">Greater than</option>
-          <option value="contains">Contains</option>
-          <option value="notContains">Does not contain</option>
-        </select>
-      </div>
-    </div>
-    <div class="condition-row__value-col">
-      <div class="govuk-form-group">
-        <label class="govuk-label" for="conditions-${index}-value">Value</label>
-        <input class="govuk-input" id="conditions-${index}-value" name="conditions[${index}][value]" type="text">
-      </div>
-    </div>
-    <div class="condition-row__actions-col">
-      <a href="#" class="govuk-link govuk-body-s condition-row__delete">Delete row</a>
-    </div>
-  </div>
-  <div class="condition-row__toggles">
-    <a href="#" class="govuk-link govuk-body-s condition-row__use-custom">Use custom property</a>
-    <a href="#" class="govuk-link govuk-body-s condition-row__use-standard app-hidden">Use standard property</a>
-  </div>
-</div>`
+function cloneBlankRow (container, index) {
+  // Clone the first server-rendered row as the template so the field list
+  // is defined in a single place (query.njk) and not duplicated here.
+  const template = container.querySelector('.condition-row')
+  const clone = template.cloneNode(true)
+
+  // Reset all input values and select selections
+  clone.querySelectorAll('input').forEach((el) => { el.value = '' })
+  clone.querySelectorAll('select').forEach((el) => { el.selectedIndex = 0 })
+
+  // Restore to standard-field state (hide custom group, show field group)
+  const fieldGroup = clone.querySelector('.condition-row__field-group')
+  const customGroup = clone.querySelector('.condition-row__custom-group')
+  const useCustomLink = clone.querySelector('.condition-row__use-custom')
+  const useStandardLink = clone.querySelector('.condition-row__use-standard')
+  if (fieldGroup) {
+    fieldGroup.classList.remove('app-hidden')
+  }
+  if (customGroup) {
+    customGroup.classList.add('app-hidden')
+  }
+  if (useCustomLink) {
+    useCustomLink.classList.remove('app-hidden')
+  }
+  if (useStandardLink) {
+    useStandardLink.classList.add('app-hidden')
+  }
+
+  const select = clone.querySelector('.condition-row__field-select')
+  if (select) select.name = `conditions[${index}][field]`
+
+  clone.dataset.rowIndex = String(index)
+  clone.querySelectorAll('[id]').forEach((el) => {
+    el.id = el.id.replace(/conditions-\d+-/, `conditions-${index}-`)
+  })
+  clone.querySelectorAll('[name]').forEach((el) => {
+    el.name = el.name.replace(/conditions\[\d+\]/, `conditions[${index}]`)
+  })
+  clone.querySelectorAll('label[for]').forEach((el) => {
+    el.htmlFor = el.htmlFor.replace(/conditions-\d+-/, `conditions-${index}-`)
+  })
+
+  return clone
 }
 
 function reindexRows (container) {
@@ -165,9 +136,7 @@ export function initQueryBuilder () {
   addLink.addEventListener('click', (e) => {
     e.preventDefault()
     const nextIndex = container.querySelectorAll('.condition-row').length
-    const div = document.createElement('div')
-    div.innerHTML = buildRowHtml(nextIndex).trim()
-    container.appendChild(div.firstChild)
+    container.appendChild(cloneBlankRow(container, nextIndex))
     updateDeleteVisibility(container)
   })
 
