@@ -70,7 +70,7 @@ describe('Audit route', () => {
   test('unauthenticated request redirects', async () => {
     const unauthResponse = await server.inject({
       method: 'GET',
-      url: '/audit'
+      url: '/'
     })
     expect(unauthResponse.statusCode).toBe(302)
   })

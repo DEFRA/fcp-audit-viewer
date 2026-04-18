@@ -5,7 +5,7 @@ const logger = createLogger()
 
 export const audit = {
   method: 'GET',
-  path: '/audit',
+  path: '/',
   options: {
     auth: {
       strategy: 'session',

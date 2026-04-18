@@ -14,7 +14,7 @@ vi.mock('../../../src/routes/start.js', () => ({
 }))
 
 vi.mock('../../../src/routes/audit.js', () => ({
-  audit: { method: 'GET', path: '/audit' }
+  audit: { method: 'GET', path: '/' }
 }))
 
 vi.mock('../../../src/routes/results.js', () => ({
@@ -87,7 +87,7 @@ describe('router', () => {
     await router.plugin.register(mockServer)
 
     expect(mockServer.route).toHaveBeenCalledWith(
-      expect.objectContaining({ path: '/audit' })
+      expect.objectContaining({ path: '/' })
     )
   })
 
