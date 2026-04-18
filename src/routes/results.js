@@ -1,5 +1,33 @@
 import { get } from '../api/get.js'
 
+function buildPaginationItems (currentPage, totalPages, baseParams) {
+  if (totalPages <= 1) return []
+
+  const pageUrl = (p) => '/results?' + new URLSearchParams({ ...baseParams, page: p }).toString()
+
+  const visiblePages = new Set([1, totalPages])
+  for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+    if (i >= 1 && i <= totalPages) visiblePages.add(i)
+  }
+
+  const sorted = [...visiblePages].sort((a, b) => a - b)
+  const items = []
+
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0 && sorted[i] - sorted[i - 1] > 1) {
+      items.push({ type: 'ellipsis' })
+    }
+    items.push({
+      type: 'number',
+      page: sorted[i],
+      href: pageUrl(sorted[i]),
+      current: sorted[i] === currentPage
+    })
+  }
+
+  return items
+}
+
 const filterParams = [
   'user',
   'sessionid',
@@ -53,6 +81,8 @@ export const results = {
     const baseParams = { ...params }
     delete baseParams.page
 
+    const totalPages = total > 0 ? Math.ceil(total / currentPageSize) : 1
+
     const prevUrl = currentPage > 1
       ? '/results?' + new URLSearchParams({ ...baseParams, page: currentPage - 1 }).toString()
       : null
@@ -61,12 +91,16 @@ export const results = {
       ? '/results?' + new URLSearchParams({ ...baseParams, page: currentPage + 1 }).toString()
       : null
 
+    const pages = buildPaginationItems(currentPage, totalPages, baseParams)
+
     return h.view('results', {
       events: response.data.events,
       meta: response.meta,
       currentQuery: request.query,
       prevUrl,
-      nextUrl
+      nextUrl,
+      pages,
+      totalPages
     })
   }
 }

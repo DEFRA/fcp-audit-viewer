@@ -16,152 +16,180 @@
 
       {% if events and events.length %}
         {% for event in events %}
-          <details class="govuk-details">
-            <summary class="govuk-details__summary">
-              <span class="govuk-details__summary-text">
-                {{ event.application }} / {{ event.component }} — {{ event.datetime }}
-              </span>
-            </summary>
-            <div class="govuk-details__text">
-              <dl class="govuk-summary-list">
-                {% if event.user %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">User</dt>
-                    <dd class="govuk-summary-list__value">{{ event.user }}</dd>
-                  </div>
-                {% endif %}
-                {% if event.sessionid %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Session ID</dt>
-                    <dd class="govuk-summary-list__value">{{ event.sessionid }}</dd>
-                  </div>
-                {% endif %}
-                {% if event.correlationid %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Correlation ID</dt>
-                    <dd class="govuk-summary-list__value">{{ event.correlationid }}</dd>
-                  </div>
-                {% endif %}
-                {% if event.datetime %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Datetime</dt>
-                    <dd class="govuk-summary-list__value">{{ event.datetime }}</dd>
-                  </div>
-                {% endif %}
-                {% if event.environment %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Environment</dt>
-                    <dd class="govuk-summary-list__value">{{ event.environment }}</dd>
-                  </div>
-                {% endif %}
-                {% if event.version %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Version</dt>
-                    <dd class="govuk-summary-list__value">{{ event.version }}</dd>
-                  </div>
-                {% endif %}
-                {% if event.application %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Application</dt>
-                    <dd class="govuk-summary-list__value">{{ event.application }}</dd>
-                  </div>
-                {% endif %}
-                {% if event.component %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Component</dt>
-                    <dd class="govuk-summary-list__value">{{ event.component }}</dd>
-                  </div>
-                {% endif %}
-                {% if event.ip %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">IP</dt>
-                    <dd class="govuk-summary-list__value">{{ event.ip }}</dd>
-                  </div>
-                {% endif %}
-                {% if event.audit %}
-                  {% if event.audit.status %}
-                    <div class="govuk-summary-list__row">
-                      <dt class="govuk-summary-list__key">Status</dt>
-                      <dd class="govuk-summary-list__value">{{ event.audit.status }}</dd>
-                    </div>
-                  {% endif %}
-                  {% if event.audit.entities and event.audit.entities.length %}
-                    <div class="govuk-summary-list__row">
-                      <dt class="govuk-summary-list__key">Entities</dt>
-                      <dd class="govuk-summary-list__value">
-                        {% for entity in event.audit.entities %}
-                          <span>{{ entity.entity }}, {{ entity.action }}, {{ entity.entityid }}</span>{% if not loop.last %}<br>{% endif %}
-                        {% endfor %}
-                      </dd>
-                    </div>
-                  {% endif %}
-                  {% if event.audit.accounts %}
-                    {% set hasAccount = false %}
-                    {% for key, value in event.audit.accounts %}
-                      {% if value !== null and value !== undefined %}
-                        {% set hasAccount = true %}
+          <div class="govuk-summary-card">
+            <div class="govuk-summary-card__title-wrapper" style="display: flex; justify-content: space-between; align-items: center;">
+              <h2 class="govuk-summary-card__title">{{ event.application }}</h2>
+              <span class="govuk-body govuk-!-margin-bottom-0">{{ event.datetime | formatDate }}</span>
+            </div>
+            <div class="govuk-summary-card__content">
+              {% if event.audit and event.audit.entities and event.audit.entities.length %}
+                <table class="govuk-table">
+                  <caption class="govuk-table__caption govuk-table__caption--s">{{ event.component }}</caption>
+                  <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                      <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Entity</th>
+                      <th scope="col" class="govuk-table__header govuk-!-width-one-half">ID</th>
+                      <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="govuk-table__body">
+                    {% for entity in event.audit.entities %}
+                      {% if entity.action === 'created' %}
+                        {% set tagClass = 'govuk-tag--green' %}
+                      {% elif entity.action === 'deleted' %}
+                        {% set tagClass = 'govuk-tag--red' %}
+                      {% elif entity.action === 'updated' %}
+                        {% set tagClass = 'govuk-tag--yellow' %}
+                      {% elif entity.action === 'read' %}
+                        {% set tagClass = 'govuk-tag--purple' %}
+                      {% else %}
+                        {% set tagClass = 'govuk-tag--blue' %}
                       {% endif %}
+                      <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">{{ entity.entity | titleCase }}</td>
+                        <td class="govuk-table__cell">{{ entity.entityid }}</td>
+                        <td class="govuk-table__cell"><strong class="govuk-tag {{ tagClass }}">{{ entity.action | titleCase }}</strong></td>
+                      </tr>
                     {% endfor %}
-                    {% if hasAccount %}
+                  </tbody>
+                </table>
+              {% endif %}
+
+              <details class="govuk-details">
+                <summary class="govuk-details__summary">
+                  <span class="govuk-details__summary-text">View full event</span>
+                </summary>
+                <div class="govuk-details__text">
+                  <dl class="govuk-summary-list">
+                    {% if event.user %}
                       <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">Accounts</dt>
-                        <dd class="govuk-summary-list__value">
-                          {% for key, value in event.audit.accounts %}
-                            {% if value !== null and value !== undefined %}
-                              <span>{{ key }}: {{ value }}</span><br>
-                            {% endif %}
-                          {% endfor %}
-                        </dd>
+                        <dt class="govuk-summary-list__key">User</dt>
+                        <dd class="govuk-summary-list__value">{{ event.user }}</dd>
                       </div>
                     {% endif %}
-                  {% endif %}
-                  {% if event.audit.details %}
-                    <div class="govuk-summary-list__row">
-                      <dt class="govuk-summary-list__key">Details</dt>
-                      <dd class="govuk-summary-list__value">
-                        {% for key, value in event.audit.details %}
-                          {% if value is mapping %}
-                            <span>{{ key }}: {{ value | dump }}</span><br>
-                          {% else %}
-                            <span>{{ key }}: {{ value }}</span><br>
+                    {% if event.sessionid %}
+                      <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Session ID</dt>
+                        <dd class="govuk-summary-list__value">{{ event.sessionid }}</dd>
+                      </div>
+                    {% endif %}
+                    {% if event.correlationid %}
+                      <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Correlation ID</dt>
+                        <dd class="govuk-summary-list__value">{{ event.correlationid }}</dd>
+                      </div>
+                    {% endif %}
+                    {% if event.datetime %}
+                      <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Datetime</dt>
+                        <dd class="govuk-summary-list__value">{{ event.datetime }}</dd>
+                      </div>
+                    {% endif %}
+                    {% if event.environment %}
+                      <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Environment</dt>
+                        <dd class="govuk-summary-list__value">{{ event.environment }}</dd>
+                      </div>
+                    {% endif %}
+                    {% if event.version %}
+                      <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Version</dt>
+                        <dd class="govuk-summary-list__value">{{ event.version }}</dd>
+                      </div>
+                    {% endif %}
+                    {% if event.ip %}
+                      <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">IP</dt>
+                        <dd class="govuk-summary-list__value">{{ event.ip }}</dd>
+                      </div>
+                    {% endif %}
+                    {% if event.audit %}
+                      {% if event.audit.status %}
+                        {% set statusLower = event.audit.status | lower %}
+                        {% if statusLower === 'success' %}
+                          {% set statusTagClass = 'govuk-tag--green' %}
+                        {% elif statusLower === 'failure' %}
+                          {% set statusTagClass = 'govuk-tag--red' %}
+                        {% else %}
+                          {% set statusTagClass = 'govuk-tag--grey' %}
+                        {% endif %}
+                        <div class="govuk-summary-list__row">
+                          <dt class="govuk-summary-list__key">Status</dt>
+                          <dd class="govuk-summary-list__value"><strong class="govuk-tag {{ statusTagClass }}">{{ event.audit.status | titleCase }}</strong></dd>
+                        </div>
+                      {% endif %}
+                      {% if event.audit.accounts %}
+                        {% for key, value in event.audit.accounts %}
+                          {% if value !== null and value !== undefined %}
+                            <div class="govuk-summary-list__row">
+                              <dt class="govuk-summary-list__key">{{ key }}</dt>
+                              <dd class="govuk-summary-list__value">{{ value }}</dd>
+                            </div>
                           {% endif %}
                         {% endfor %}
-                      </dd>
-                    </div>
-                  {% endif %}
-                {% endif %}
-              </dl>
+                      {% endif %}
+                      {% if event.audit.details %}
+                        {% for key, value in event.audit.details %}
+                          <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">{{ key }}</dt>
+                            <dd class="govuk-summary-list__value">
+                              {% if value is mapping %}
+                                {{ value | dump }}
+                              {% else %}
+                                {{ value }}
+                              {% endif %}
+                            </dd>
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endif %}
+                  </dl>
+                </div>
+              </details>
             </div>
-          </details>
+          </div>
         {% endfor %}
       {% else %}
         <p class="govuk-body">No results found.</p>
       {% endif %}
 
-      {% if prevUrl or nextUrl %}
-          <nav class="govuk-pagination" aria-label="Pagination">
-            {% if prevUrl %}
-              <div class="govuk-pagination__prev">
-                <a class="govuk-link govuk-pagination__link" href="{{ prevUrl }}" rel="prev">
-                  <svg class="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://www.w3.org/2000/svg" height="13" width="15" focusable="false" aria-hidden="true" viewBox="0 0 15 13">
-                    <path d="m6.5938-0.0078125-6.7266 6.7266 6.7441 6.4062 1.377-1.449-4.1856-3.9768h12.896v-2h-12.984l4.2931-4.293-1.414-1.414z"/>
-                  </svg>
-                  <span class="govuk-pagination__link-title">Previous<span class="govuk-visually-hidden"> page</span></span>
-                </a>
-              </div>
-            {% endif %}
-            {% if nextUrl %}
-              <div class="govuk-pagination__next">
-                <a class="govuk-link govuk-pagination__link" href="{{ nextUrl }}" rel="next">
-                  <span class="govuk-pagination__link-title">Next<span class="govuk-visually-hidden"> page</span></span>
-                  <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" focusable="false" aria-hidden="true" viewBox="0 0 15 13">
-                    <path d="m8.107-0.0078125-1.4136 1.414 4.2926 4.293h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7246-6.7246z"/>
-                  </svg>
-                </a>
-              </div>
-            {% endif %}
-          </nav>
-        {% endif %}
+      {% if pages and pages.length %}
+        <nav class="govuk-pagination" aria-label="Pagination">
+          {% if prevUrl %}
+            <div class="govuk-pagination__prev">
+              <a class="govuk-link govuk-pagination__link" href="{{ prevUrl }}" rel="prev">
+                <svg class="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://www.w3.org/2000/svg" height="13" width="15" focusable="false" aria-hidden="true" viewBox="0 0 15 13">
+                  <path d="m6.5938-0.0078125-6.7266 6.7266 6.7441 6.4062 1.377-1.449-4.1856-3.9768h12.896v-2h-12.984l4.2931-4.293-1.414-1.414z"/>
+                </svg>
+                <span class="govuk-pagination__link-title">Previous<span class="govuk-visually-hidden"> page</span></span>
+              </a>
+            </div>
+          {% endif %}
+          <ul class="govuk-pagination__list">
+            {% for item in pages %}
+              {% if item.type === 'ellipsis' %}
+                <li class="govuk-pagination__item govuk-pagination__item--ellipses">&ctdot;</li>
+              {% else %}
+                <li class="govuk-pagination__item{% if item.current %} govuk-pagination__item--current{% endif %}">
+                  <a class="govuk-link govuk-pagination__link" href="{{ item.href }}" aria-label="Page {{ item.page }}"{% if item.current %} aria-current="page"{% endif %}>
+                    {{ item.page }}
+                  </a>
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+          {% if nextUrl %}
+            <div class="govuk-pagination__next">
+              <a class="govuk-link govuk-pagination__link" href="{{ nextUrl }}" rel="next">
+                <span class="govuk-pagination__link-title">Next<span class="govuk-visually-hidden"> page</span></span>
+                <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" focusable="false" aria-hidden="true" viewBox="0 0 15 13">
+                  <path d="m8.107-0.0078125-1.4136 1.414 4.2926 4.293h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7246-6.7246z"/>
+                </svg>
+              </a>
+            </div>
+          {% endif %}
+        </nav>
+      {% endif %}
 
       <p class="govuk-body">
         <a href="/audit" class="govuk-link">Back to dashboard</a>
