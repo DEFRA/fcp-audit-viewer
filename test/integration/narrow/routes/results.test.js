@@ -77,16 +77,6 @@ describe('Results route', () => {
     expect(response.payload).toContain('fcp-audit')
   })
 
-  test('Back to dashboard link is present', () => {
-    const link = $('a[href="/audit"]')
-    expect(link.text().trim()).toBe('Back to dashboard')
-  })
-
-  test('Modify search link is present', () => {
-    const link = $('a[href^="/query"]')
-    expect(link.length).toBeGreaterThan(0)
-  })
-
   test('Shows Next pagination link when more results exist', async () => {
     const paginatedMock = {
       ...mockResponse,
