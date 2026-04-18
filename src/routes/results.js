@@ -2,13 +2,17 @@ import qs from 'qs'
 import { get } from '../api/get.js'
 
 function buildPaginationItems (currentPage, totalPages, baseConditions, basePageSize) {
-  if (totalPages <= 1) return []
+  if (totalPages <= 1) {
+    return []
+  }
 
   const pageUrl = (p) => '/results?' + qs.stringify({ conditions: baseConditions, pageSize: basePageSize, page: p })
 
   const visiblePages = new Set([1, totalPages])
   for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-    if (i >= 1 && i <= totalPages) visiblePages.add(i)
+    if (i >= 1 && i <= totalPages) {
+      visiblePages.add(i)
+    }
   }
 
   const sorted = [...visiblePages].sort((a, b) => a - b)

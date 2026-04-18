@@ -50,16 +50,22 @@ Object.entries(globals).forEach(([name, global]) => {
 })
 
 nunjucksEnvironment.addFilter('titleCase', (value) => {
-  if (!value) return ''
+  if (!value) {
+    return ''
+  }
   return String(value)
-    .replace(/-/g, ' ')
-    .replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .replaceAll('-', ' ')
+    .replaceAll(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
 })
 
 nunjucksEnvironment.addFilter('formatDate', (value) => {
-  if (!value) return ''
+  if (!value) {
+    return ''
+  }
   const d = new Date(value)
-  if (isNaN(d.getTime())) return value
+  if (Number.isNaN(d.getTime())) {
+    return value
+  }
   const pad = (n) => String(n).padStart(2, '0')
   return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 })

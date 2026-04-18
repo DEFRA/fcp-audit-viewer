@@ -103,12 +103,22 @@ function toggleCustom (row) {
   const customGroup = row.querySelector('.condition-row__custom-group')
   const useCustomLink = row.querySelector('.condition-row__use-custom')
   const useStandardLink = row.querySelector('.condition-row__use-standard')
-  if (fieldGroup) fieldGroup.classList.add('app-hidden')
-  if (customGroup) customGroup.classList.remove('app-hidden')
-  if (useCustomLink) useCustomLink.classList.add('app-hidden')
-  if (useStandardLink) useStandardLink.classList.remove('app-hidden')
+  if (fieldGroup) {
+    fieldGroup.classList.add('app-hidden')
+  }
+  if (customGroup) {
+    customGroup.classList.remove('app-hidden')
+  }
+  if (useCustomLink) {
+    useCustomLink.classList.add('app-hidden')
+  }
+  if (useStandardLink) {
+    useStandardLink.classList.remove('app-hidden')
+  }
   const select = row.querySelector('.condition-row__field-select')
-  if (select) select.name = ''
+  if (select) {
+    select.name = ''
+  }
 }
 
 function toggleStandard (row) {
@@ -117,22 +127,38 @@ function toggleStandard (row) {
   const useCustomLink = row.querySelector('.condition-row__use-custom')
   const useStandardLink = row.querySelector('.condition-row__use-standard')
   const index = row.dataset.rowIndex
-  if (fieldGroup) fieldGroup.classList.remove('app-hidden')
-  if (customGroup) customGroup.classList.add('app-hidden')
-  if (useCustomLink) useCustomLink.classList.remove('app-hidden')
-  if (useStandardLink) useStandardLink.classList.add('app-hidden')
+  if (fieldGroup) {
+    fieldGroup.classList.remove('app-hidden')
+  }
+  if (customGroup) {
+    customGroup.classList.add('app-hidden')
+  }
+  if (useCustomLink) {
+    useCustomLink.classList.remove('app-hidden')
+  }
+  if (useStandardLink) {
+    useStandardLink.classList.add('app-hidden')
+  }
   const select = row.querySelector('.condition-row__field-select')
-  if (select) select.name = `conditions[${index}][field]`
+  if (select) {
+    select.name = `conditions[${index}][field]`
+  }
   const customInput = row.querySelector('.condition-row__custom-input')
-  if (customInput) customInput.value = ''
+  if (customInput) {
+    customInput.value = ''
+  }
 }
 
 export function initQueryBuilder () {
-  if (typeof document === 'undefined') return
+  if (typeof document === 'undefined') {
+    return
+  }
   const container = document.getElementById('condition-rows')
   const addLink = document.getElementById('add-condition')
 
-  if (!container || !addLink) return
+  if (!container || !addLink) {
+    return
+  }
 
   updateDeleteVisibility(container)
 
@@ -147,17 +173,25 @@ export function initQueryBuilder () {
 
   container.addEventListener('click', (e) => {
     const row = e.target.closest('.condition-row')
-    if (!row) return
+    if (!row) {
+      return
+    }
 
     if (e.target.closest('.condition-row__delete')) {
       e.preventDefault()
       row.remove()
       reindexRows(container)
       updateDeleteVisibility(container)
-    } else if (e.target.closest('.condition-row__use-custom')) {
+      return
+    }
+
+    if (e.target.closest('.condition-row__use-custom')) {
       e.preventDefault()
       toggleCustom(row)
-    } else if (e.target.closest('.condition-row__use-standard')) {
+      return
+    }
+
+    if (e.target.closest('.condition-row__use-standard')) {
       e.preventDefault()
       toggleStandard(row)
     }

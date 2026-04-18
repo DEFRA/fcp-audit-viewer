@@ -9,7 +9,9 @@ function conditionHref (conditions) {
 }
 
 function buildSummaryLinks (summary) {
-  if (!summary || !summary.applications) return summary
+  if (!summary?.applications) {
+    return summary
+  }
 
   return {
     ...summary,
