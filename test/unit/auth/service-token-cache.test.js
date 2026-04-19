@@ -86,6 +86,18 @@ describe('service-token-cache', () => {
 
       expect(mockRedis.set).not.toHaveBeenCalled()
     })
+
+    test('should propagate error when redis.get throws', async () => {
+      mockRedis.get.mockRejectedValue(new Error('Redis connection failed'))
+
+      await expect(getToken()).rejects.toThrow('Redis connection failed')
+    })
+
+    test('should propagate error when redis.set throws after fetching token', async () => {
+      mockRedis.set.mockRejectedValue(new Error('Redis write failed'))
+
+      await expect(getToken()).rejects.toThrow('Redis write failed')
+    })
   })
 
   describe('dropToken', () => {
@@ -93,6 +105,12 @@ describe('service-token-cache', () => {
       await dropToken()
 
       expect(mockRedis.del).toHaveBeenCalledWith(CACHE_KEY)
+    })
+
+    test('should propagate error when redis.del throws', async () => {
+      mockRedis.del.mockRejectedValue(new Error('Redis delete failed'))
+
+      await expect(dropToken()).rejects.toThrow('Redis delete failed')
     })
   })
 })

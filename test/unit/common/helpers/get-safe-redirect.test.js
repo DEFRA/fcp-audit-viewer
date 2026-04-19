@@ -10,9 +10,7 @@ describe('get-safe-redirect', () => {
 
     test('should return / for protocol-relative URL', () => {
       const result = getSafeRedirect('//evil.com/phishing')
-      // Note: The current implementation only checks for leading '/', so this passes through
-      // This is a potential security issue that should be addressed
-      expect(result).toBe('//evil.com/phishing')
+      expect(result).toBe('/')
     })
 
     test('should return / for external URL', () => {
@@ -66,7 +64,7 @@ describe('get-safe-redirect', () => {
     })
 
     test('should return / for backslash at start', () => {
-      const result = getSafeRedirect('\\admin\\payments')
+      const result = getSafeRedirect(String.raw`\admin\payments`)
       expect(result).toBe('/')
     })
   })

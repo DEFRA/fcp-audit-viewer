@@ -1,4 +1,4 @@
-import { constants } from 'http2'
+import { constants } from 'node:http2'
 import { vi, describe, beforeAll, afterAll, beforeEach, test, expect } from 'vitest'
 import { mockOidcConfig } from '../helpers/setup-server-mocks.js'
 
@@ -272,6 +272,18 @@ describe('auth routes', () => {
       })
       expect(response.statusCode).toBe(HTTP_STATUS_INTERNAL_SERVER_ERROR)
       expect(response.request.response.source.template).toBe('errors/500')
+    })
+
+    test('should redirect to oidc sign out url when authenticated without sessionId', async () => {
+      const response = await server.inject({
+        url: path,
+        auth: {
+          strategy: 'session',
+          credentials: { ...credentials, sessionId: undefined }
+        }
+      })
+      expect(response.statusCode).toBe(HTTP_STATUS_FOUND)
+      expect(response.headers.location).toBe(signOutUrl)
     })
   })
 

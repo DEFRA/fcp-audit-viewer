@@ -141,10 +141,16 @@ npm run docker:dev           # Runs on port 3006
 
 
 ### Testing
+
+**Always run tests via Docker — config is only set correctly through Docker Compose:**
+
 ```bash
-npm run docker:test          # Run all tests with coverage
+npm run docker:test          # Run all tests with coverage (required)
 npm run docker:test:watch    # TDD mode
 ```
+
+> **Do not run `npm test` directly.** Environment variables and service configuration (Redis, OIDC) are only properly set when running through Docker Compose.
+
 - Mock OIDC flows in tests
 - Use `server.inject()` with auth credentials
 - Tests in `test/unit/**/*.test.js` and `test/integration/**/*.test.js`
