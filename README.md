@@ -8,7 +8,7 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-audit-viewer&metric=coverage)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-audit-viewer)
 [![Dependabot](https://badgen.net/github/dependabot/DEFRA/fcp-audit-viewer)](https://github.com/DEFRA/fcp-audit-viewer/security/dependabot)
 
-Frontend service to support querying audit events in the FCP Audit service.
+Authenticated viewer interface for querying and browsing audit events from the FCP Audit service. Server-side rendered with OIDC authentication via Microsoft Entra.
 
 ## Requirements
 
@@ -44,7 +44,7 @@ npm run docker:dev
 
 ### Testing
 
-To test the application:
+Tests **must** be run using Docker as configuration is applied via Docker Compose:
 
 ```bash
 npm run docker:test
@@ -55,6 +55,8 @@ Tests can also be run in watch mode to support Test Driven Development (TDD):
 ```bash
 npm run docker:test:watch
 ```
+
+> Do not run `npm test` directly — environment configuration is only set correctly when running via Docker.
 
 ### npm scripts
 
