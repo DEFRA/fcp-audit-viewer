@@ -142,7 +142,7 @@ describe('Results route', () => {
       auth: { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
     })
 
-    const calledPath = mockGet.mock.calls[mockGet.mock.calls.length - 1][0]
+    const calledPath = mockGet.mock.calls.at(-1)[0]
     // qs.stringify URL-encodes brackets, so compare on the unambiguous value portion
     expect(calledPath).toContain('details.caseid')
   })
@@ -156,7 +156,7 @@ describe('Results route', () => {
       auth: { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
     })
 
-    const calledPath = mockGet.mock.calls[mockGet.mock.calls.length - 1][0]
+    const calledPath = mockGet.mock.calls.at(-1)[0]
     expect(calledPath).not.toContain('application')
   })
 

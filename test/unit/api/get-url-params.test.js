@@ -13,4 +13,14 @@ describe('getUrlParams', () => {
 
     expect(url).toMatch(`/${page}?val=${obj.val}&anotherVal=${obj.anotherVal}`)
   })
+
+  test('should return path without query string when no params provided', () => {
+    const url = getUrlParams('results')
+    expect(url).toBe('/results')
+  })
+
+  test('should return path without query string when empty params object provided', () => {
+    const url = getUrlParams('results', {})
+    expect(url).toBe('/results')
+  })
 })

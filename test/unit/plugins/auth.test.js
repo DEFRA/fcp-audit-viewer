@@ -10,9 +10,24 @@ vi.mock('../../../src/config/config.js', () => ({
   }
 }))
 
+vi.mock('@hapi/jwt', () => ({
+  default: {
+    token: {
+      decode: vi.fn(),
+      verifyTime: vi.fn()
+    }
+  }
+}))
+
+vi.mock('../../../src/auth/refresh-tokens.js', () => ({
+  refreshTokens: vi.fn()
+}))
+
 const { getOidcConfig } = await import('../../../src/auth/get-oidc-config.js')
 const { config } = await import('../../../src/config/config.js')
-const { auth } = await import('../../../src/plugins/auth.js')
+const Jwt = (await import('@hapi/jwt')).default
+const { refreshTokens } = await import('../../../src/auth/refresh-tokens.js')
+const { auth, getCookieOptions } = await import('../../../src/plugins/auth.js')
 
 describe('auth', () => {
   const mockOidcConfig = {
@@ -130,5 +145,102 @@ describe('auth', () => {
     expect(bellOptions.clientSecret).toBe('test-client-secret')
     expect(config.get).toHaveBeenCalledWith('entra.clientId')
     expect(config.get).toHaveBeenCalledWith('entra.clientSecret')
+  })
+})
+
+describe('validateToken', () => {
+  let validate
+  let mockCache
+  let mockRequest
+
+  const userSession = {
+    token: 'valid-token',
+    refreshToken: 'refresh-token',
+    sessionId: 'session-id'
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    config.get.mockImplementation((key) => {
+      const configMap = {
+        'cookie.password': 'password-must-be-at-least-32-characters-long',
+        'cookie.secure': false,
+        'entra.refreshTokens': false
+      }
+      return configMap[key]
+    })
+
+    mockCache = {
+      get: vi.fn(),
+      set: vi.fn()
+    }
+
+    mockRequest = {
+      server: {
+        app: { cache: mockCache },
+        logger: { info: vi.fn() }
+      }
+    }
+
+    validate = getCookieOptions().validate
+  })
+
+  test('should return isValid false when session not found in cache', async () => {
+    mockCache.get.mockResolvedValue(null)
+
+    const result = await validate(mockRequest, { sessionId: 'missing-session' })
+
+    expect(result).toEqual({ isValid: false })
+  })
+
+  test('should return isValid true when session exists and token is valid', async () => {
+    mockCache.get.mockResolvedValue(userSession)
+    Jwt.token.decode.mockReturnValue({ decoded: { payload: {} } })
+    Jwt.token.verifyTime.mockReturnValue(undefined)
+
+    const result = await validate(mockRequest, { sessionId: 'session-id' })
+
+    expect(result).toEqual({ isValid: true, credentials: userSession })
+  })
+
+  test('should return isValid false when token is expired and refreshTokens is disabled', async () => {
+    mockCache.get.mockResolvedValue(userSession)
+    Jwt.token.decode.mockReturnValue({ decoded: { payload: {} } })
+    Jwt.token.verifyTime.mockImplementation(() => { throw new Error('Token expired') })
+    config.get.mockImplementation((key) => key === 'entra.refreshTokens' ? false : undefined)
+
+    const result = await validate(mockRequest, { sessionId: 'session-id' })
+
+    expect(result).toEqual({ isValid: false })
+    expect(mockRequest.server.logger.info).toHaveBeenCalledWith('Token expired')
+  })
+
+  test('should refresh token and return isValid true when token is expired and refreshTokens is enabled', async () => {
+    const updatedSession = { ...userSession, token: 'new-token', refreshToken: 'new-refresh-token' }
+    mockCache.get.mockResolvedValue({ ...userSession })
+    Jwt.token.decode.mockReturnValue({ decoded: { payload: {} } })
+    Jwt.token.verifyTime.mockImplementation(() => { throw new Error('Token expired') })
+    config.get.mockImplementation((key) => key === 'entra.refreshTokens' ? true : undefined)
+    refreshTokens.mockResolvedValue({ access_token: 'new-token', refresh_token: 'new-refresh-token' })
+    mockCache.set.mockResolvedValue(undefined)
+
+    const result = await validate(mockRequest, { sessionId: 'session-id' })
+
+    expect(refreshTokens).toHaveBeenCalledWith(userSession.refreshToken)
+    expect(mockCache.set).toHaveBeenCalledWith('session-id', expect.objectContaining({
+      token: 'new-token',
+      refreshToken: 'new-refresh-token'
+    }))
+    expect(result).toEqual({ isValid: true, credentials: updatedSession })
+  })
+
+  test('should propagate error when refreshTokens throws', async () => {
+    mockCache.get.mockResolvedValue({ ...userSession })
+    Jwt.token.decode.mockReturnValue({ decoded: { payload: {} } })
+    Jwt.token.verifyTime.mockImplementation(() => { throw new Error('Token expired') })
+    config.get.mockImplementation((key) => key === 'entra.refreshTokens' ? true : undefined)
+    refreshTokens.mockRejectedValue(new Error('Refresh failed'))
+
+    await expect(validate(mockRequest, { sessionId: 'session-id' })).rejects.toThrow('Refresh failed')
   })
 })
