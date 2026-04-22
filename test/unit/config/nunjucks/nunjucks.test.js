@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeAll } from 'vitest'
+import { detailsRows } from '../../../../src/config/nunjucks/details-rows.js'
 
 vi.mock('../../../../src/common/helpers/logging/logger.js', () => ({
   createLogger: () => ({ error: vi.fn(), info: vi.fn() })
@@ -86,12 +87,6 @@ describe('nunjucks formatDate filter', () => {
 })
 
 describe('nunjucks detailsRows filter', () => {
-  let detailsRows
-
-  beforeAll(() => {
-    detailsRows = env.getFilter('detailsRows')
-  })
-
   test('returns empty array for empty object', () => {
     expect(detailsRows({})).toEqual([])
   })

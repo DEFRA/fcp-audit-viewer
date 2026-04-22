@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { config } from '../config.js'
 import { context } from './context.js'
 import * as globals from './globals.js'
+import { detailsRows } from './details-rows.js'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const nunjucksEnvironment = nunjucks.configure(
@@ -49,108 +50,7 @@ Object.entries(globals).forEach(([name, global]) => {
   nunjucksEnvironment.addGlobal(name, global)
 })
 
-// ---------------------------------------------------------------------------
-// detailsRows filter helpers
-// ---------------------------------------------------------------------------
-
-const escapeHtml = (str) =>
-  String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-
-const renderDetailsHtml = (obj) => {
-  if (obj === null || obj === undefined || typeof obj !== 'object') {
-    return escapeHtml(obj ?? '')
-  }
-
-  if (Array.isArray(obj)) {
-    return obj
-      .map((item) => {
-        if (item === null || item === undefined) {
-          return ''
-        }
-        if (typeof item === 'object') {
-          return `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key"></dt><dd class="govuk-summary-list__value">${renderValueHtml(item, '')}</dd></div>`
-        }
-        return `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key"></dt><dd class="govuk-summary-list__value">${escapeHtml(item)}</dd></div>`
-      })
-      .join('')
-  }
-
-  return Object.entries(obj)
-    .filter(([, v]) => v !== null && v !== undefined)
-    .map(([k, v]) => {
-      if (Array.isArray(v)) {
-        if (v.length === 0) {
-          return ''
-        }
-        return v
-          .map((item) => {
-            if (item === null || item === undefined) {
-              return ''
-            }
-            const valueHtml =
-              typeof item === 'object'
-                ? renderValueHtml(item, k)
-                : escapeHtml(item)
-            return `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">${escapeHtml(k)}</dt><dd class="govuk-summary-list__value">${valueHtml}</dd></div>`
-          })
-          .join('')
-      }
-      if (typeof v === 'object') {
-        return `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">${escapeHtml(k)}</dt><dd class="govuk-summary-list__value">${renderValueHtml(v, k)}</dd></div>`
-      }
-      return `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">${escapeHtml(k)}</dt><dd class="govuk-summary-list__value">${escapeHtml(v)}</dd></div>`
-    })
-    .join('')
-}
-
-const renderValueHtml = (value, key) =>
-  '<details class="govuk-details">' +
-  '<summary class="govuk-details__summary">' +
-  `<span class="govuk-details__summary-text">View ${escapeHtml(key)}</span>` +
-  '</summary>' +
-  '<div class="govuk-details__text">' +
-  `<dl class="govuk-summary-list">${renderDetailsHtml(value)}</dl>` +
-  '</div>' +
-  '</details>'
-
-nunjucksEnvironment.addFilter('detailsRows', (details) => {
-  if (!details || typeof details !== 'object' || Array.isArray(details)) {
-    return []
-  }
-  const rows = []
-  for (const [key, value] of Object.entries(details)) {
-    if (value === null || value === undefined) {
-      continue
-    }
-    if (Array.isArray(value)) {
-      if (value.length === 0) {
-        continue
-      }
-      for (const item of value) {
-        if (item === null || item === undefined) {
-          continue
-        }
-        if (typeof item === 'object') {
-          rows.push({ key: { text: key }, value: { html: renderValueHtml(item, key) } })
-        } else {
-          rows.push({ key: { text: key }, value: { text: String(item) } })
-        }
-      }
-    } else if (typeof value === 'object') {
-      rows.push({ key: { text: key }, value: { html: renderValueHtml(value, key) } })
-    } else {
-      rows.push({ key: { text: key }, value: { text: String(value) } })
-    }
-  }
-  return rows
-})
-
-// ---------------------------------------------------------------------------
+nunjucksEnvironment.addFilter('detailsRows', detailsRows)
 
 nunjucksEnvironment.addFilter('titleCase', (value) => {
   if (!value) {
