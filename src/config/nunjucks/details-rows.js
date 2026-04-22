@@ -6,29 +6,23 @@ const escapeHtml = (str) =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;')
 
-const renderDetailsHtml = (obj) => {
-  if (obj === null || obj === undefined || typeof obj !== 'object') {
-    return escapeHtml(obj ?? '')
-  }
+const renderRow = (key, value) =>
+  `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">${escapeHtml(key)}</dt><dd class="govuk-summary-list__value">${toHtmlValue(value, key)}</dd></div>`
 
+const isPresent = (v) => v !== null && v !== undefined
+
+const renderDetailsHtml = (obj) => {
   if (Array.isArray(obj)) {
-    return obj
-      .filter((item) => item !== null && item !== undefined)
-      .map((item) => `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key"></dt><dd class="govuk-summary-list__value">${toHtmlValue(item, '')}</dd></div>`)
-      .join('')
+    return obj.filter(isPresent).map((item) => renderRow('', item)).join('')
   }
 
   return Object.entries(obj)
-    .filter(([, v]) => v !== null && v !== undefined)
-    .map(([k, v]) => {
-      if (Array.isArray(v)) {
-        return v
-          .filter((item) => item !== null && item !== undefined)
-          .map((item) => `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">${escapeHtml(k)}</dt><dd class="govuk-summary-list__value">${toHtmlValue(item, k)}</dd></div>`)
-          .join('')
-      }
-      return `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">${escapeHtml(k)}</dt><dd class="govuk-summary-list__value">${toHtmlValue(v, k)}</dd></div>`
-    })
+    .filter(([, v]) => isPresent(v))
+    .flatMap(([k, v]) =>
+      Array.isArray(v)
+        ? v.filter(isPresent).map((item) => renderRow(k, item))
+        : [renderRow(k, v)]
+    )
     .join('')
 }
 
@@ -56,20 +50,12 @@ export const detailsRows = (details) => {
   if (!details || typeof details !== 'object' || Array.isArray(details)) {
     return []
   }
-  const rows = []
-  for (const [key, value] of Object.entries(details)) {
-    if (value === null || value === undefined) {
-      continue
-    }
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        if (item !== null && item !== undefined) {
-          rows.push({ key: { text: key }, value: toRowValue(item, key) })
-        }
-      }
-    } else {
-      rows.push({ key: { text: key }, value: toRowValue(value, key) })
-    }
-  }
-  return rows
+
+  return Object.entries(details)
+    .filter(([, value]) => isPresent(value))
+    .flatMap(([key, value]) =>
+      Array.isArray(value)
+        ? value.filter(isPresent).map((item) => ({ key: { text: key }, value: toRowValue(item, key) }))
+        : [{ key: { text: key }, value: toRowValue(value, key) }]
+    )
 }

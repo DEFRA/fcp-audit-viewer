@@ -195,6 +195,52 @@ describe('nunjucks detailsRows filter', () => {
     expect(rows[0].key.text).toBe('name')
   })
 
+  test('skips null and undefined items within array values', () => {
+    const rows = detailsRows({ tags: [null, 'a', undefined, 'b'] })
+    expect(rows).toHaveLength(2)
+    expect(rows.map((r) => r.value.text)).toEqual(['a', 'b'])
+  })
+
+  test('maps boolean values to text rows', () => {
+    const rows = detailsRows({ active: true, deleted: false })
+    expect(rows).toHaveLength(2)
+    expect(rows[0].value.text).toBe('true')
+    expect(rows[1].value.text).toBe('false')
+  })
+
+  test('escapes HTML special characters in primitive values within array items', () => {
+    const rows = detailsRows({ tags: ['<b>bold</b>', 'normal'] })
+    expect(rows[0].value.text).toBe('<b>bold</b>')
+  })
+
+  test('escapes HTML special characters in nested object keys within html output', () => {
+    const rows = detailsRows({ meta: { '<script>': 'xss' } })
+    expect(rows[0].value.html).toContain('&lt;script&gt;')
+    expect(rows[0].value.html).not.toContain('<script>')
+  })
+
+  test('renders a nested array inside an object value as a details element', () => {
+    // outer.inner is an array — renderDetailsHtml is called with an array when
+    // a deeply nested array is encountered as an object property's value
+    const rows = detailsRows({ outer: { inner: [{ x: 1 }, { x: 2 }] } })
+    expect(rows).toHaveLength(1)
+    const html = rows[0].value.html
+    expect(html).toContain('View outer')
+    expect(html).toContain('View inner')
+    expect(html).toContain('1')
+    expect(html).toContain('2')
+  })
+
+  test('renders a nested array-of-arrays via renderDetailsHtml array branch', () => {
+    // Passing an array as the value of a nested object property causes
+    // renderDetailsHtml to enter the Array.isArray branch
+    const rows = detailsRows({ outer: { tags: [['a', 'b']] } })
+    expect(rows).toHaveLength(1)
+    const html = rows[0].value.html
+    expect(html).toContain('View outer')
+    expect(html).toContain('View tags')
+  })
+
   test('escapes HTML special characters in keys', () => {
     const rows = detailsRows({ '<script>': 'value' })
     expect(rows[0].key.text).toBe('<script>')
