@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { config } from '../config.js'
 import { context } from './context.js'
 import * as globals from './globals.js'
+import { detailsRows } from './details-rows.js'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const nunjucksEnvironment = nunjucks.configure(
@@ -48,6 +49,8 @@ export const nunjucksConfig = {
 Object.entries(globals).forEach(([name, global]) => {
   nunjucksEnvironment.addGlobal(name, global)
 })
+
+nunjucksEnvironment.addFilter('detailsRows', detailsRows)
 
 nunjucksEnvironment.addFilter('titleCase', (value) => {
   if (!value) {

@@ -70,12 +70,8 @@
     {% endfor %}
   {% endif %}
   {% if event.audit and event.audit.details %}
-    {% for key, value in event.audit.details %}
-      {% if value is mapping %}
-        {% set _ = detailRows.push({ key: { text: key }, value: { html: '<pre class="govuk-body-s">' + (value | dump) + '</pre>' } }) %}
-      {% else %}
-        {% set _ = detailRows.push({ key: { text: key }, value: { text: value } }) %}
-      {% endif %}
+    {% for row in event.audit.details | detailsRows %}
+      {% set _ = detailRows.push(row) %}
     {% endfor %}
   {% endif %}
 
