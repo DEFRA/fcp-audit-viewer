@@ -84,3 +84,200 @@ describe('nunjucks formatDate filter', () => {
     expect(value).toBe(expected)
   })
 })
+
+describe('nunjucks detailsRows filter', () => {
+  let detailsRows
+
+  beforeAll(() => {
+    detailsRows = env.getFilter('detailsRows')
+  })
+
+  test('returns empty array for empty object', () => {
+    expect(detailsRows({})).toEqual([])
+  })
+
+  test('returns empty array for null', () => {
+    expect(detailsRows(null)).toEqual([])
+  })
+
+  test('returns empty array for undefined', () => {
+    expect(detailsRows(undefined)).toEqual([])
+  })
+
+  test('returns empty array for a non-object value', () => {
+    expect(detailsRows('not an object')).toEqual([])
+  })
+
+  test('returns empty array for an array (not a details object)', () => {
+    expect(detailsRows([])).toEqual([])
+  })
+
+  test('maps a primitive string value to a text row', () => {
+    const rows = detailsRows({ status: 'offered' })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toEqual({ key: { text: 'status' }, value: { text: 'offered' } })
+  })
+
+  test('maps a primitive number value to a text row', () => {
+    const rows = detailsRows({ count: 42 })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toEqual({ key: { text: 'count' }, value: { text: '42' } })
+  })
+
+  test('skips null values', () => {
+    const rows = detailsRows({ present: 'yes', missing: null })
+    expect(rows).toHaveLength(1)
+    expect(rows[0].key.text).toBe('present')
+  })
+
+  test('skips undefined values', () => {
+    const rows = detailsRows({ present: 'yes', missing: undefined })
+    expect(rows).toHaveLength(1)
+    expect(rows[0].key.text).toBe('present')
+  })
+
+  test('maps a simple object value to an html row with a details element', () => {
+    const rows = detailsRows({ address: { line1: '123 Street', city: 'London' } })
+    expect(rows).toHaveLength(1)
+    const { key, value } = rows[0]
+    expect(key).toEqual({ text: 'address' })
+    expect(value.html).toContain('<details class="govuk-details">')
+    expect(value.html).toContain('View address')
+    expect(value.html).toContain('line1')
+    expect(value.html).toContain('123 Street')
+    expect(value.html).toContain('city')
+    expect(value.html).toContain('London')
+  })
+
+  test('renders nested objects recursively', () => {
+    const rows = detailsRows({
+      applicant: {
+        business: {
+          name: 'Acme Ltd',
+          address: { line1: '1 Road', city: 'York' }
+        }
+      }
+    })
+    expect(rows).toHaveLength(1)
+    const html = rows[0].value.html
+    expect(html).toContain('View applicant')
+    expect(html).toContain('View business')
+    expect(html).toContain('View address')
+    expect(html).toContain('1 Road')
+    expect(html).toContain('York')
+  })
+
+  test('maps an array of primitives to repeated text rows with the same key', () => {
+    const rows = detailsRows({ tags: ['a', 'b', 'c'] })
+    expect(rows).toHaveLength(3)
+    for (const row of rows) {
+      expect(row.key).toEqual({ text: 'tags' })
+      expect(row.value.text).toBeDefined()
+    }
+    expect(rows.map((r) => r.value.text)).toEqual(['a', 'b', 'c'])
+  })
+
+  test('maps an array of objects to repeated html rows with the same key', () => {
+    const rows = detailsRows({
+      payments: [
+        { amount: 100, date: '2026-01-01' },
+        { amount: 200, date: '2026-04-01' }
+      ]
+    })
+    expect(rows).toHaveLength(2)
+    for (const row of rows) {
+      expect(row.key).toEqual({ text: 'payments' })
+      expect(row.value.html).toContain('<details class="govuk-details">')
+      expect(row.value.html).toContain('View payments')
+    }
+    expect(rows[0].value.html).toContain('100')
+    expect(rows[1].value.html).toContain('200')
+  })
+
+  test('skips empty array values', () => {
+    const rows = detailsRows({ items: [], name: 'test' })
+    expect(rows).toHaveLength(1)
+    expect(rows[0].key.text).toBe('name')
+  })
+
+  test('escapes HTML special characters in keys', () => {
+    const rows = detailsRows({ '<script>': 'value' })
+    expect(rows[0].key.text).toBe('<script>')
+  })
+
+  test('escapes HTML special characters in primitive values within nested objects', () => {
+    const rows = detailsRows({ meta: { msg: '<b>bold</b>' } })
+    expect(rows[0].value.html).toContain('&lt;b&gt;bold&lt;/b&gt;')
+    expect(rows[0].value.html).not.toContain('<b>bold</b>')
+  })
+
+  test('handles mixed details with primitives, objects, and arrays', () => {
+    const rows = detailsRows({
+      code: 'GRANT-001',
+      status: 'active',
+      identifiers: { sbi: '123456789', frn: '9876543210' },
+      tags: ['alpha', 'beta'],
+      payment: { amount: 5000, currency: 'GBP' }
+    })
+    // code, status → 2 text rows
+    // identifiers → 1 html row
+    // tags → 2 text rows
+    // payment → 1 html row
+    expect(rows).toHaveLength(6)
+    expect(rows.find((r) => r.key.text === 'code').value.text).toBe('GRANT-001')
+    expect(rows.find((r) => r.key.text === 'identifiers').value.html).toContain('<details')
+    expect(rows.filter((r) => r.key.text === 'tags')).toHaveLength(2)
+    expect(rows.find((r) => r.key.text === 'payment').value.html).toContain('5000')
+  })
+
+  test('renders the real-world complex event details structure', () => {
+    const details = {
+      notificationmessageid: 'b1ea9651-907f-47e5-981d-cfc68be946c2',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '7282807759' },
+      status: 'offered',
+      payment: {
+        agreementstartdate: '2026-05-01',
+        parcelitems: {
+          1: { code: 'CMOR1', description: 'Assess moorland', rateinpence: 1060 },
+          2: { code: 'UPL3', description: 'Limited livestock', rateinpence: 11100 }
+        },
+        payments: [
+          { totalpaymentpence: 23741, paymentdate: '2026-08-15' },
+          { totalpaymentpence: 23736, paymentdate: '2026-11-15' }
+        ]
+      },
+      actionapplications: [],
+      consentobjects: []
+    }
+
+    const rows = detailsRows(details)
+
+    // Primitives
+    expect(rows.find((r) => r.key.text === 'notificationmessageid').value.text).toBe(
+      'b1ea9651-907f-47e5-981d-cfc68be946c2'
+    )
+    expect(rows.find((r) => r.key.text === 'code').value.text).toBe('frps-private-beta')
+    expect(rows.find((r) => r.key.text === 'status').value.text).toBe('offered')
+
+    // Object → details element
+    const identifiersRow = rows.find((r) => r.key.text === 'identifiers')
+    expect(identifiersRow.value.html).toContain('View identifiers')
+    expect(identifiersRow.value.html).toContain('106284736')
+
+    // Nested object with nested object and array
+    const paymentRow = rows.find((r) => r.key.text === 'payment')
+    expect(paymentRow.value.html).toContain('View payment')
+    expect(paymentRow.value.html).toContain('2026-05-01')
+    // parcelitems is a nested object
+    expect(paymentRow.value.html).toContain('View parcelitems')
+    expect(paymentRow.value.html).toContain('CMOR1')
+    // payments is an array of objects inside payment
+    expect(paymentRow.value.html).toContain('View payments')
+    expect(paymentRow.value.html).toContain('23741')
+
+    // Empty arrays are skipped
+    expect(rows.find((r) => r.key.text === 'actionapplications')).toBeUndefined()
+    expect(rows.find((r) => r.key.text === 'consentobjects')).toBeUndefined()
+  })
+})
