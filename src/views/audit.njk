@@ -21,6 +21,7 @@
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
           {{ govukSummaryList({
+            classes: "app-audit-summary",
             card: {
               title: { text: "Summary" }
             },
@@ -77,6 +78,7 @@
               }) %}
             {% endfor %}
             {{ govukSummaryList({
+              classes: "app-audit-summary",
               card: {
                 title: { text: application.application }
               },
