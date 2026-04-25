@@ -1,5 +1,8 @@
+import { constants as httpConstants } from 'node:http2'
 import Wreck from '@hapi/wreck'
 import { config } from '../config/config.js'
+
+const { HTTP_STATUS_OK } = httpConstants
 
 export async function getServiceToken () {
   const tenantId = config.get('entra.tenantId')
@@ -26,7 +29,7 @@ export async function getServiceToken () {
     }
   )
 
-  if (res.statusCode !== 200 || !payload.token_type || !payload.access_token) {
+  if (res.statusCode !== HTTP_STATUS_OK || !payload.token_type || !payload.access_token) {
     throw new Error(`Failed to acquire service token: ${payload.error ?? res.statusCode}`)
   }
 

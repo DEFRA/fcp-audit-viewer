@@ -82,6 +82,10 @@ export const results = {
 
       const pages = buildPaginationItems(page, totalPages, conditions, pageSize)
 
+      const downloadUrl = total > 0
+        ? '/download?' + qs.stringify({ conditions })
+        : null
+
       const referrer = request.info.referrer
       let backUrl = '/'
       if (referrer) {
@@ -100,7 +104,8 @@ export const results = {
         nextUrl,
         pages,
         totalPages,
-        backUrl
+        backUrl,
+        downloadUrl
       })
     } catch (err) {
       logger.error('Failed to fetch search results', err)
@@ -112,7 +117,8 @@ export const results = {
         nextUrl: null,
         pages: [],
         totalPages: 1,
-        backUrl: '/'
+        backUrl: '/',
+        downloadUrl: null
       })
     }
   }

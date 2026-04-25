@@ -1,4 +1,7 @@
+import { constants as httpConstants } from 'node:http2'
 import { vi, describe, beforeEach, test, expect } from 'vitest'
+
+const { HTTP_STATUS_OK, HTTP_STATUS_BAD_REQUEST } = httpConstants
 
 const mockWreckPost = vi.fn()
 vi.mock('@hapi/wreck', () => ({
@@ -28,7 +31,7 @@ describe('getServiceToken', () => {
       }
     })
     mockWreckPost.mockResolvedValue({
-      res: { statusCode: 200 },
+      res: { statusCode: HTTP_STATUS_OK },
       payload: { token_type: 'Bearer', access_token: 'mock-access-token' }
     })
   })
@@ -104,7 +107,7 @@ describe('getServiceToken', () => {
 
   test('should throw when response status is not 200', async () => {
     mockWreckPost.mockResolvedValue({
-      res: { statusCode: 400 },
+      res: { statusCode: HTTP_STATUS_BAD_REQUEST },
       payload: { error: 'invalid_client' }
     })
     await expect(getServiceToken()).rejects.toThrow('Failed to acquire service token: invalid_client')
@@ -112,7 +115,7 @@ describe('getServiceToken', () => {
 
   test('should throw when token_type is missing from successful response', async () => {
     mockWreckPost.mockResolvedValue({
-      res: { statusCode: 200 },
+      res: { statusCode: HTTP_STATUS_OK },
       payload: { access_token: 'some-token' }
     })
     await expect(getServiceToken()).rejects.toThrow('Failed to acquire service token: 200')
@@ -120,7 +123,7 @@ describe('getServiceToken', () => {
 
   test('should throw when access_token is missing from successful response', async () => {
     mockWreckPost.mockResolvedValue({
-      res: { statusCode: 200 },
+      res: { statusCode: HTTP_STATUS_OK },
       payload: { token_type: 'Bearer' }
     })
     await expect(getServiceToken()).rejects.toThrow('Failed to acquire service token: 200')

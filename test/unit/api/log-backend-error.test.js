@@ -1,4 +1,7 @@
+import { constants as httpConstants } from 'node:http2'
 import { describe, test, expect, vi, beforeEach } from 'vitest'
+
+const { HTTP_STATUS_INTERNAL_SERVER_ERROR } = httpConstants
 
 const mockLogger = {
   error: vi.fn()
@@ -52,7 +55,7 @@ describe('log-backend-error', () => {
 
   test('should log error with custom error object', () => {
     const backendUrl = 'https://backend.example.com/api/v1/admin'
-    const error = { statusCode: 500, message: 'Internal server error', details: 'Database connection failed' }
+    const error = { statusCode: HTTP_STATUS_INTERNAL_SERVER_ERROR, message: 'Internal server error', details: 'Database connection failed' }
 
     logBackendError(backendUrl, error)
 

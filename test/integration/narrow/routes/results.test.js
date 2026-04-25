@@ -66,7 +66,7 @@ describe('Results route', () => {
       method: 'GET',
       url: '/results'
     })
-    expect(unauthResponse.statusCode).toBe(302)
+    expect(unauthResponse.statusCode).toBe(httpConstants.HTTP_STATUS_FOUND)
   })
 
   test('Page renders event application name', () => {

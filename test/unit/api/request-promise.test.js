@@ -1,4 +1,7 @@
+import { constants as httpConstants } from 'node:http2'
 import { describe, test, expect, vi, beforeEach } from 'vitest'
+
+const { HTTP_STATUS_NOT_FOUND } = httpConstants
 
 vi.mock('../../../src/api/log-backend-error.js', () => ({
   logBackendError: vi.fn()
@@ -44,7 +47,7 @@ describe('request-promise', () => {
 
   test('should pass through different error types', async () => {
     const backendUrl = 'https://backend.example.com/api/v1/payments'
-    const error = { statusCode: 404, message: 'Not found' }
+    const error = { statusCode: HTTP_STATUS_NOT_FOUND, message: 'Not found' }
     const promise = Promise.reject(error)
 
     await expect(requestPromise(backendUrl, promise)).rejects.toEqual(error)

@@ -1,5 +1,8 @@
+import { constants as httpConstants } from 'node:http2'
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest'
 import '../helpers/setup-server-mocks.js'
+
+const { HTTP_STATUS_NOT_FOUND } = httpConstants
 
 const { createServer } = await import('../../../../src/server.js')
 
@@ -94,7 +97,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['x-content-type-options']).toBe('nosniff')
     })
 
@@ -102,7 +105,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['x-frame-options']).toBe('DENY')
     })
 
@@ -110,7 +113,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['x-robots-tag']).toBe('noindex, nofollow')
     })
 
@@ -118,7 +121,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['x-xss-protection']).toBe('1; mode=block')
     })
 
@@ -126,7 +129,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['cross-origin-opener-policy']).toBe('same-origin')
     })
 
@@ -134,7 +137,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['cross-origin-embedder-policy']).toBe('require-corp')
     })
 
@@ -142,7 +145,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['cross-origin-resource-policy']).toBe('same-site')
     })
 
@@ -150,7 +153,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['referrer-policy']).toBe('same-origin')
     })
 
@@ -158,7 +161,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['permissions-policy']).toBe('camera=(), geolocation=(), magnetometer=(), microphone=(), payment=(), usb=()')
     })
 
@@ -166,7 +169,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['strict-transport-security']).toBe('max-age=31536000; includeSubDomains; preload')
     })
 
@@ -174,7 +177,7 @@ describe('headers', () => {
       const response = await server.inject({
         url: '/non-existent-path'
       })
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
       expect(response.headers['x-download-options']).toBe('noopen')
     })
   })

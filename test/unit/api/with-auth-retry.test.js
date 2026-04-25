@@ -1,4 +1,7 @@
+import { constants as httpConstants } from 'node:http2'
 import { vi, describe, beforeEach, test, expect } from 'vitest'
+
+const { HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED, HTTP_STATUS_INTERNAL_SERVER_ERROR } = httpConstants
 
 const mockGetToken = vi.fn()
 const mockDropToken = vi.fn()
@@ -17,7 +20,7 @@ describe('withAuthRetry', () => {
   })
 
   test('should call fn with the token from cache', async () => {
-    const fn = vi.fn().mockResolvedValue({ res: { statusCode: 200 }, payload: {} })
+    const fn = vi.fn().mockResolvedValue({ res: { statusCode: HTTP_STATUS_OK }, payload: {} })
 
     await withAuthRetry(fn)
 
@@ -25,7 +28,7 @@ describe('withAuthRetry', () => {
   })
 
   test('should return the result from fn on success', async () => {
-    const expected = { res: { statusCode: 200 }, payload: { data: 'test' } }
+    const expected = { res: { statusCode: HTTP_STATUS_OK }, payload: { data: 'test' } }
     const fn = vi.fn().mockResolvedValue(expected)
 
     const result = await withAuthRetry(fn)
@@ -34,7 +37,7 @@ describe('withAuthRetry', () => {
   })
 
   test('should not call dropToken on a successful response', async () => {
-    const fn = vi.fn().mockResolvedValue({ res: { statusCode: 200 }, payload: {} })
+    const fn = vi.fn().mockResolvedValue({ res: { statusCode: HTTP_STATUS_OK }, payload: {} })
 
     await withAuthRetry(fn)
 
@@ -48,8 +51,8 @@ describe('withAuthRetry', () => {
       .mockResolvedValueOnce(freshToken)
 
     const fn = vi.fn()
-      .mockResolvedValueOnce({ res: { statusCode: 401 }, payload: null })
-      .mockResolvedValueOnce({ res: { statusCode: 200 }, payload: {} })
+      .mockResolvedValueOnce({ res: { statusCode: HTTP_STATUS_UNAUTHORIZED }, payload: null })
+      .mockResolvedValueOnce({ res: { statusCode: HTTP_STATUS_OK }, payload: {} })
 
     await withAuthRetry(fn)
 
@@ -59,13 +62,13 @@ describe('withAuthRetry', () => {
   })
 
   test('should return the retry result after a 401', async () => {
-    const retryResult = { res: { statusCode: 200 }, payload: { ok: true } }
+    const retryResult = { res: { statusCode: HTTP_STATUS_OK }, payload: { ok: true } }
     mockGetToken
       .mockResolvedValueOnce('Bearer mock-token')
       .mockResolvedValueOnce('Bearer fresh-token')
 
     const fn = vi.fn()
-      .mockResolvedValueOnce({ res: { statusCode: 401 }, payload: null })
+      .mockResolvedValueOnce({ res: { statusCode: HTTP_STATUS_UNAUTHORIZED }, payload: null })
       .mockResolvedValueOnce(retryResult)
 
     const result = await withAuthRetry(fn)
@@ -76,7 +79,7 @@ describe('withAuthRetry', () => {
   test('should not retry when response is 401 but token was null', async () => {
     mockGetToken.mockResolvedValue(null)
 
-    const unauthorizedResult = { res: { statusCode: 401 }, payload: null }
+    const unauthorizedResult = { res: { statusCode: HTTP_STATUS_UNAUTHORIZED }, payload: null }
     const fn = vi.fn().mockResolvedValue(unauthorizedResult)
 
     const result = await withAuthRetry(fn)
@@ -87,7 +90,7 @@ describe('withAuthRetry', () => {
   })
 
   test('should not retry on non-401 error status codes', async () => {
-    const errorResult = { res: { statusCode: 500 }, payload: null }
+    const errorResult = { res: { statusCode: HTTP_STATUS_INTERNAL_SERVER_ERROR }, payload: null }
     const fn = vi.fn().mockResolvedValue(errorResult)
 
     const result = await withAuthRetry(fn)
