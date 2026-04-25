@@ -33,7 +33,7 @@ describe('getStream', () => {
   test('requests the correct backend URL', async () => {
     mockGetToken.mockResolvedValue('Bearer mock-token')
     const mockRes = { statusCode: 200 }
-    vi.spyOn(Wreck, 'request').mockResolvedValue({ res: mockRes })
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     await getStream('/download?conditions=')
 
@@ -47,7 +47,7 @@ describe('getStream', () => {
   test('includes Authorization header when token is available', async () => {
     mockGetToken.mockResolvedValue('Bearer mock-token')
     const mockRes = { statusCode: 200 }
-    vi.spyOn(Wreck, 'request').mockResolvedValue({ res: mockRes })
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     await getStream('/download')
 
@@ -61,7 +61,7 @@ describe('getStream', () => {
   test('sends empty headers when no token is available', async () => {
     mockGetToken.mockResolvedValue(null)
     const mockRes = { statusCode: 200 }
-    vi.spyOn(Wreck, 'request').mockResolvedValue({ res: mockRes })
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     await getStream('/download')
 
@@ -75,7 +75,7 @@ describe('getStream', () => {
   test('returns response stream on success', async () => {
     mockGetToken.mockResolvedValue('Bearer mock-token')
     const mockRes = { statusCode: 200, pipe: vi.fn() }
-    vi.spyOn(Wreck, 'request').mockResolvedValue({ res: mockRes })
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     const result = await getStream('/download')
 
@@ -89,8 +89,8 @@ describe('getStream', () => {
     const staleRes = { statusCode: 401 }
     const freshRes = { statusCode: 200 }
     vi.spyOn(Wreck, 'request')
-      .mockResolvedValueOnce({ res: staleRes })
-      .mockResolvedValueOnce({ res: freshRes })
+      .mockResolvedValueOnce(staleRes)
+      .mockResolvedValueOnce(freshRes)
 
     const result = await getStream('/download')
 
@@ -102,7 +102,7 @@ describe('getStream', () => {
   test('does not retry when no token was used on 401', async () => {
     mockGetToken.mockResolvedValue(null)
     const mockRes = { statusCode: 401 }
-    vi.spyOn(Wreck, 'request').mockResolvedValue({ res: mockRes })
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     const result = await getStream('/download')
 

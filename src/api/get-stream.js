@@ -8,14 +8,13 @@ export async function getStream (path) {
   const token = await getToken()
   const headers = token ? { Authorization: token } : {}
 
-  const { res } = await Wreck.request('GET', backendUrl, { headers })
+  const res = await Wreck.request('GET', backendUrl, { headers })
 
   if (res.statusCode === 401 && token) {
     await dropToken()
     const freshToken = await getToken()
     const freshHeaders = freshToken ? { Authorization: freshToken } : {}
-    const { res: retryRes } = await Wreck.request('GET', backendUrl, { headers: freshHeaders })
-    return retryRes
+    return Wreck.request('GET', backendUrl, { headers: freshHeaders })
   }
 
   return res
