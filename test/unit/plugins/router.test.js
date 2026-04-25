@@ -21,6 +21,10 @@ vi.mock('../../../src/routes/query.js', () => ({
   query: { method: 'GET', path: '/query' }
 }))
 
+vi.mock('../../../src/routes/download.js', () => ({
+  download: { method: 'GET', path: '/download' }
+}))
+
 vi.mock('../../../src/common/helpers/serve-static-files.js', () => ({
   serveStaticFiles: { method: 'GET', path: '/assets/{param*}' }
 }))
@@ -91,6 +95,14 @@ describe('router', () => {
   test('should register expected number of routes', async () => {
     await router.plugin.register(mockServer)
 
-    expect(mockServer.route.mock.calls.length).toBe(5)
+    expect(mockServer.route.mock.calls.length).toBe(6)
+  })
+
+  test('should register download route', async () => {
+    await router.plugin.register(mockServer)
+
+    expect(mockServer.route).toHaveBeenCalledWith(
+      expect.objectContaining({ path: '/download' })
+    )
   })
 })
