@@ -37,7 +37,7 @@ describe('Download route', () => {
 
   test('Unauthenticated request returns 302 redirect', async () => {
     const response = await server.inject({ method: 'GET', url: '/download' })
-    expect(response.statusCode).toBe(302)
+    expect(response.statusCode).toBe(httpConstants.HTTP_STATUS_FOUND)
   })
 
   test('Response has text/csv content type', async () => {

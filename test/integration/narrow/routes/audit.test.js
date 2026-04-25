@@ -79,7 +79,7 @@ describe('Audit route', () => {
       method: 'GET',
       url: '/'
     })
-    expect(unauthResponse.statusCode).toBe(302)
+    expect(unauthResponse.statusCode).toBe(httpConstants.HTTP_STATUS_FOUND)
   })
 
   test('renders total count', () => {

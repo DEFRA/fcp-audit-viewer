@@ -1,5 +1,8 @@
+import { constants as httpConstants } from 'node:http2'
 import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest'
 import Wreck from '@hapi/wreck'
+
+const { HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED } = httpConstants
 
 const mockGetToken = vi.fn()
 const mockDropToken = vi.fn()
@@ -32,7 +35,7 @@ describe('getStream', () => {
 
   test('requests the correct backend URL', async () => {
     mockGetToken.mockResolvedValue('Bearer mock-token')
-    const mockRes = { statusCode: 200 }
+    const mockRes = { statusCode: HTTP_STATUS_OK }
     vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     await getStream('/download?conditions=')
@@ -46,7 +49,7 @@ describe('getStream', () => {
 
   test('includes Authorization header when token is available', async () => {
     mockGetToken.mockResolvedValue('Bearer mock-token')
-    const mockRes = { statusCode: 200 }
+    const mockRes = { statusCode: HTTP_STATUS_OK }
     vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     await getStream('/download')
@@ -60,7 +63,7 @@ describe('getStream', () => {
 
   test('sends empty headers when no token is available', async () => {
     mockGetToken.mockResolvedValue(null)
-    const mockRes = { statusCode: 200 }
+    const mockRes = { statusCode: HTTP_STATUS_OK }
     vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     await getStream('/download')
@@ -74,7 +77,7 @@ describe('getStream', () => {
 
   test('returns response stream on success', async () => {
     mockGetToken.mockResolvedValue('Bearer mock-token')
-    const mockRes = { statusCode: 200, pipe: vi.fn() }
+    const mockRes = { statusCode: HTTP_STATUS_OK, pipe: vi.fn() }
     vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     const result = await getStream('/download')
@@ -86,8 +89,8 @@ describe('getStream', () => {
     mockGetToken
       .mockResolvedValueOnce('Bearer stale-token')
       .mockResolvedValueOnce('Bearer fresh-token')
-    const staleRes = { statusCode: 401 }
-    const freshRes = { statusCode: 200 }
+    const staleRes = { statusCode: HTTP_STATUS_UNAUTHORIZED }
+    const freshRes = { statusCode: HTTP_STATUS_OK }
     vi.spyOn(Wreck, 'request')
       .mockResolvedValueOnce(staleRes)
       .mockResolvedValueOnce(freshRes)
@@ -101,7 +104,7 @@ describe('getStream', () => {
 
   test('does not retry when no token was used on 401', async () => {
     mockGetToken.mockResolvedValue(null)
-    const mockRes = { statusCode: 401 }
+    const mockRes = { statusCode: HTTP_STATUS_UNAUTHORIZED }
     vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
 
     const result = await getStream('/download')

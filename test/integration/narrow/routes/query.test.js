@@ -35,7 +35,7 @@ describe('Query route', () => {
       method: 'GET',
       url: '/query'
     })
-    expect(unauthResponse.statusCode).toBe(302)
+    expect(unauthResponse.statusCode).toBe(httpConstants.HTTP_STATUS_FOUND)
   })
 
   test('Form action attribute is /results', () => {
