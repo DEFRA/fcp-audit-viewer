@@ -8,7 +8,7 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-audit-viewer&metric=coverage)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-audit-viewer)
 [![Dependabot](https://badgen.net/github/dependabot/DEFRA/fcp-audit-viewer)](https://github.com/DEFRA/fcp-audit-viewer/security/dependabot)
 
-Authenticated viewer interface for querying and browsing audit events from the FCP Audit service. Server-side rendered with OIDC authentication via Microsoft Entra.
+Authenticated viewer interface for querying and browsing audit events from the FCP Audit service. OIDC authentication via Microsoft Entra.
 
 ## Requirements
 
