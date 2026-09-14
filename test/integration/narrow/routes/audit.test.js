@@ -107,7 +107,22 @@ describe('Audit route', () => {
     expect(link.text().trim()).toBe('Query builder')
   })
 
-  test('calls get with the logged in user oid', () => {
+  test('calls get with the logged in user oid', async () => {
+    mockGet.mockResolvedValueOnce({ data: { summary: mockSummary } })
+
+    await server.inject({
+      method: 'GET',
+      url: '/',
+      auth: {
+        strategy: 'session',
+        credentials: {
+          scope: ['Audit.View'],
+          sessionId: 'test-session-id',
+          oid: 'test-user-oid'
+        }
+      }
+    })
+
     expect(mockGet).toHaveBeenCalledWith('/summary', 'test-user-oid')
   })
 })
