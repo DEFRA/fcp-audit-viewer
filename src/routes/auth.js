@@ -2,6 +2,7 @@ import { getSignOutUrl } from '../auth/get-sign-out-url.js'
 import { validateState } from '../auth/state.js'
 import { verifyToken } from '../auth/verify-token.js'
 import { getSafeRedirect } from '../common/helpers/get-safe-redirect.js'
+import { sendAuthEvent } from '../common/helpers/audit/audit.js'
 
 export const auth = [{
   method: 'GET',
@@ -43,6 +44,8 @@ export const auth = [{
     // Create a new session using cookie authentication strategy which is used for all subsequent requests
     request.cookieAuth.set({ sessionId: profile.sessionId })
 
+    await sendAuthEvent(request, 'login', profile)
+
     // Redirect user to the page they were trying to access before signing in or to the home page if no redirect was set
     const redirect = request.yar.get('redirect') ?? '/'
     request.yar.clear('redirect')
@@ -58,6 +61,8 @@ export const auth = [{
   },
   handler: async function (request, h) {
     if (request.auth.isAuthenticated) {
+      await sendAuthEvent(request, 'logout', request.auth.credentials)
+
       if (request.auth.credentials?.sessionId) {
         // Clear the session cache before redirecting to Entra to clear SSO session
         await request.server.app.cache.drop(request.auth.credentials.sessionId)

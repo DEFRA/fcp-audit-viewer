@@ -267,6 +267,58 @@ export const config = convict({
       env: 'REDIS_TTL'
     }
   },
+  cdpEnvironment: {
+    doc: 'The CDP environment the app is running in. With the addition of "local" for local development',
+    format: [
+      'local',
+      'infra-dev',
+      'management',
+      'dev',
+      'test',
+      'perf-test',
+      'ext-test',
+      'prod'
+    ],
+    default: 'local',
+    env: 'ENVIRONMENT'
+  },
+  aws: {
+    region: {
+      doc: 'AWS region',
+      format: String,
+      default: 'eu-west-2',
+      env: 'AWS_REGION'
+    },
+    endpoint: {
+      doc: 'Custom AWS endpoint, used to target a local AWS emulator such as Floci/LocalStack. Leave unset to use real AWS.',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'AWS_ENDPOINT_URL'
+    },
+    accessKeyId: {
+      doc: 'AWS access key ID',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'AWS_ACCESS_KEY_ID'
+    },
+    secretAccessKey: {
+      doc: 'AWS secret access key',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'AWS_SECRET_ACCESS_KEY'
+    },
+    sns: {
+      topicArn: {
+        doc: 'AWS SNS topic ARN for publishing api access audit events',
+        format: String,
+        default: null,
+        env: 'AUDIT_INTERNAL_PUBLISH_SNS_TOPIC_ARN'
+      }
+    }
+  }
 })
 
 config.validate({ allowed: 'strict' })

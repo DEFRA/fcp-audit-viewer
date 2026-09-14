@@ -24,6 +24,11 @@ vi.mock('../../../../src/auth/state.js', () => ({
   validateState: mockValidateState
 }))
 
+const mockSendAuthEvent = vi.fn()
+vi.mock('../../../../src/common/helpers/audit/audit.js', () => ({
+  sendAuthEvent: mockSendAuthEvent
+}))
+
 const credentials = {
   sessionId: 'session-id',
   profile: {
@@ -208,6 +213,17 @@ describe('auth routes', () => {
       expect(sessionCookie).not.toMatch(/Max-Age=/)
     })
 
+    test('should publish a login audit event', async () => {
+      await server.inject({
+        url: path,
+        auth: {
+          strategy: 'entra',
+          credentials
+        }
+      })
+      expect(mockSendAuthEvent).toHaveBeenCalledWith(expect.anything(), 'login', credentials.profile)
+    })
+
     test('should ensure redirect path is safe', async () => {
       await server.inject({
         url: path,
@@ -250,12 +266,30 @@ describe('auth routes', () => {
       expect(response.headers.location).toBe(signOutUrl)
     })
 
+    test('should publish a logout audit event if authenticated', async () => {
+      await server.inject({
+        url: path,
+        auth: {
+          strategy: 'session',
+          credentials
+        }
+      })
+      expect(mockSendAuthEvent).toHaveBeenCalledWith(expect.anything(), 'logout', credentials)
+    })
+
     test('redirects to home page if unauthenticated', async () => {
       const response = await server.inject({
         url: path
       })
       expect(response.statusCode).toBe(HTTP_STATUS_FOUND)
       expect(response.headers.location).toBe('/')
+    })
+
+    test('should not publish a logout audit event if unauthenticated', async () => {
+      await server.inject({
+        url: path
+      })
+      expect(mockSendAuthEvent).not.toHaveBeenCalled()
     })
 
     test('should return error page if unable to get sign out url', async () => {

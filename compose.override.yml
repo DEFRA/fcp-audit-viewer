@@ -4,6 +4,7 @@ services:
       - '3006:3006'
       - '9006:9229'
     networks:
+      - default
       - fcp-audit
     depends_on:
       redis:
