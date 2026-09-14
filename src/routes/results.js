@@ -67,7 +67,7 @@ export const results = {
 
     try {
       const queryString = qs.stringify({ conditions, page, pageSize })
-      const response = await get('/search?' + queryString)
+      const response = await get('/search?' + queryString, request.auth.credentials.oid)
 
       const total = response?.meta?.total ?? 0
       const totalPages = total > 0 ? Math.ceil(total / pageSize) : 1

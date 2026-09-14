@@ -53,7 +53,8 @@ describe('Audit route', () => {
         strategy: 'session',
         credentials: {
           scope: ['Audit.View'],
-          sessionId: 'test-session-id'
+          sessionId: 'test-session-id',
+          oid: 'test-user-oid'
         }
       }
     })
@@ -104,6 +105,10 @@ describe('Audit route', () => {
   test('Query builder link present', () => {
     const link = $('a[href="/query"]')
     expect(link.text().trim()).toBe('Query builder')
+  })
+
+  test('calls get with the logged in user oid', () => {
+    expect(mockGet).toHaveBeenCalledWith('/summary', 'test-user-oid')
   })
 })
 

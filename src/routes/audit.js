@@ -38,9 +38,9 @@ export const audit = {
       scope: ['Audit.View']
     }
   },
-  handler: async function (_request, h) {
+  handler: async function (request, h) {
     try {
-      const response = await get('/summary')
+      const response = await get('/summary', request.auth.credentials.oid)
       return h.view('audit', { summary: buildSummaryLinks(response.data.summary) })
     } catch (err) {
       logger.error('Failed to fetch audit summary', err)

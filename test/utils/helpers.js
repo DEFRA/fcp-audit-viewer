@@ -13,7 +13,8 @@ function getOptions (page, method = 'GET', params = {}, listParams = {}) {
       strategy: 'session',
       credentials: {
         scope: ['Audit.View'],
-        sessionId: 'test-session-id'
+        sessionId: 'test-session-id',
+        oid: 'test-user-oid'
       }
     }
   }

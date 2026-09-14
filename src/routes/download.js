@@ -28,7 +28,7 @@ export const download = {
     }).filter((c) => c.field && c.operator && c.value !== undefined)
 
     const queryString = qs.stringify({ conditions })
-    const stream = await getStream('/download?' + queryString)
+    const stream = await getStream('/download?' + queryString, request.auth.credentials.oid)
 
     return h.response(stream)
       .type('text/csv')
