@@ -74,13 +74,14 @@ describe('Download route', () => {
       url: '/download?conditions[0][field]=application&conditions[0][operator]=eq&conditions[0][value]=FCP001',
       auth: {
         strategy: 'session',
-        credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' }
+        credentials: { scope: ['Audit.View'], sessionId: 'test-session-id', oid: 'test-user-oid' }
       }
     })
 
     expect(response.statusCode).toBe(httpConstants.HTTP_STATUS_OK)
     expect(mockGetStream).toHaveBeenCalledWith(
-      expect.stringContaining('/download?')
+      expect.stringContaining('/download?'),
+      'test-user-oid'
     )
   })
 })

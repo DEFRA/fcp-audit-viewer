@@ -71,6 +71,30 @@ describe('get', () => {
     )
   })
 
+  test('should include X-Audit-User-Id header when userId is provided', async () => {
+    const mockGet = vi.fn().mockResolvedValue({ payload: null })
+    vi.spyOn(Wreck, 'get').mockImplementation(mockGet)
+
+    await get(route, 'user-oid-123')
+
+    expect(mockGet).toHaveBeenCalledWith(
+      `${endpoint}${path}${route}`,
+      { headers: { Authorization: 'Bearer mock-token', 'X-Audit-User-Id': 'user-oid-123' }, json: true }
+    )
+  })
+
+  test('should not include X-Audit-User-Id header when userId is not provided', async () => {
+    const mockGet = vi.fn().mockResolvedValue({ payload: null })
+    vi.spyOn(Wreck, 'get').mockImplementation(mockGet)
+
+    await get(route)
+
+    expect(mockGet).toHaveBeenCalledWith(
+      `${endpoint}${path}${route}`,
+      { headers: { Authorization: 'Bearer mock-token' }, json: true }
+    )
+  })
+
   test('should handle error when request fails', async () => {
     const mockLoggerError = vi.fn()
     mockLogger.error = mockLoggerError

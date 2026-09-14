@@ -75,6 +75,34 @@ describe('getStream', () => {
     )
   })
 
+  test('includes X-Audit-User-Id header when userId is provided', async () => {
+    mockGetToken.mockResolvedValue('Bearer mock-token')
+    const mockRes = { statusCode: HTTP_STATUS_OK }
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
+
+    await getStream('/download', 'user-oid-123')
+
+    expect(Wreck.request).toHaveBeenCalledWith(
+      'GET',
+      expect.any(String),
+      { headers: { Authorization: 'Bearer mock-token', 'X-Audit-User-Id': 'user-oid-123' } }
+    )
+  })
+
+  test('does not include X-Audit-User-Id header when userId is not provided', async () => {
+    mockGetToken.mockResolvedValue('Bearer mock-token')
+    const mockRes = { statusCode: HTTP_STATUS_OK }
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
+
+    await getStream('/download')
+
+    expect(Wreck.request).toHaveBeenCalledWith(
+      'GET',
+      expect.any(String),
+      { headers: { Authorization: 'Bearer mock-token' } }
+    )
+  })
+
   test('returns response stream on success', async () => {
     mockGetToken.mockResolvedValue('Bearer mock-token')
     const mockRes = { statusCode: HTTP_STATUS_OK, pipe: vi.fn() }

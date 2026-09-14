@@ -61,6 +61,14 @@ describe('Results route', () => {
     expect(response.statusCode).toBe(httpConstants.HTTP_STATUS_OK)
   })
 
+  test('calls get with the logged in user oid', async () => {
+    mockGet.mockResolvedValueOnce(mockResponse)
+
+    await server.inject(getOptions('results', 'GET'))
+
+    expect(mockGet.mock.calls.at(-1)[1]).toBe('test-user-oid')
+  })
+
   test('Unauthenticated request returns 302 redirect', async () => {
     const unauthResponse = await server.inject({
       method: 'GET',
