@@ -267,6 +267,31 @@ export const config = convict({
       env: 'REDIS_TTL'
     }
   },
+  cdpEnvironment: {
+    doc: 'The CDP environment the app is running in. With the addition of "local" for local development',
+    format: [
+      'local',
+      'infra-dev',
+      'management',
+      'dev',
+      'test',
+      'perf-test',
+      'ext-test',
+      'prod'
+    ],
+    default: 'local',
+    env: 'ENVIRONMENT'
+  },
+  aws: {
+    sns: {
+      topicArn: {
+        doc: 'AWS SNS topic ARN for publishing api access audit events',
+        format: String,
+        default: null,
+        env: 'AUDIT_INTERNAL_PUBLISH_SNS_TOPIC_ARN'
+      }
+    }
+  }
 })
 
 config.validate({ allowed: 'strict' })
