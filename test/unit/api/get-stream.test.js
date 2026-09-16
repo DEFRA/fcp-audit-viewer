@@ -173,6 +173,26 @@ describe('getStream', () => {
     expect(result).toBe(freshRes)
   })
 
+  test('retries without an Authorization header when no fresh token is available', async () => {
+    mockGetToken
+      .mockResolvedValueOnce('Bearer stale-token')
+      .mockResolvedValueOnce(null)
+    const staleRes = { statusCode: HTTP_STATUS_UNAUTHORIZED }
+    const freshRes = { statusCode: HTTP_STATUS_OK }
+    vi.spyOn(Wreck, 'request')
+      .mockResolvedValueOnce(staleRes)
+      .mockResolvedValueOnce(freshRes)
+
+    await getStream('/download')
+
+    expect(Wreck.request).toHaveBeenNthCalledWith(
+      2,
+      'GET',
+      expect.any(String),
+      { headers: {} }
+    )
+  })
+
   test('does not retry when no token was used on 401', async () => {
     mockGetToken.mockResolvedValue(null)
     const mockRes = { statusCode: HTTP_STATUS_UNAUTHORIZED }
