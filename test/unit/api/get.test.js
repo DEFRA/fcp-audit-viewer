@@ -21,6 +21,18 @@ vi.mock('../../../src/api/with-auth-retry.js', () => ({
   withAuthRetry: mockWithAuthRetry
 }))
 
+const mockGetTraceId = vi.fn()
+vi.mock('@defra/hapi-tracing', () => ({
+  getTraceId: () => mockGetTraceId(),
+  withTraceId: (headerName, headers = {}) => {
+    const traceId = mockGetTraceId()
+    if (traceId) {
+      headers[headerName] = traceId
+    }
+    return headers
+  }
+}))
+
 const { createLogger } = await import('../../../src/common/helpers/logging/logger.js')
 const mockLogger = createLogger()
 
@@ -30,6 +42,7 @@ describe('get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockWithAuthRetry.mockImplementation((fn) => fn('Bearer mock-token'))
+    mockGetTraceId.mockReturnValue(undefined)
 
     config.load({})
     config.validate({ allowed: 'strict' })
@@ -37,6 +50,7 @@ describe('get', () => {
     vi.spyOn(config, 'get').mockImplementation(key => {
       if (key === 'backend.endpoint') return endpoint
       if (key === 'backend.path') return path
+      if (key === 'tracing.header') return 'x-cdp-request-id'
       return config[key]
     })
   })
@@ -84,6 +98,32 @@ describe('get', () => {
   })
 
   test('should not include X-Audit-User-Id header when userId is not provided', async () => {
+    const mockGet = vi.fn().mockResolvedValue({ payload: null })
+    vi.spyOn(Wreck, 'get').mockImplementation(mockGet)
+
+    await get(route)
+
+    expect(mockGet).toHaveBeenCalledWith(
+      `${endpoint}${path}${route}`,
+      { headers: { Authorization: 'Bearer mock-token' }, json: true }
+    )
+  })
+
+  test('should include the tracing header when a trace id is available', async () => {
+    mockGetTraceId.mockReturnValue('trace-id-789')
+
+    const mockGet = vi.fn().mockResolvedValue({ payload: null })
+    vi.spyOn(Wreck, 'get').mockImplementation(mockGet)
+
+    await get(route)
+
+    expect(mockGet).toHaveBeenCalledWith(
+      `${endpoint}${path}${route}`,
+      { headers: { Authorization: 'Bearer mock-token', 'x-cdp-request-id': 'trace-id-789' }, json: true }
+    )
+  })
+
+  test('should not include the tracing header when there is no trace id', async () => {
     const mockGet = vi.fn().mockResolvedValue({ payload: null })
     vi.spyOn(Wreck, 'get').mockImplementation(mockGet)
 

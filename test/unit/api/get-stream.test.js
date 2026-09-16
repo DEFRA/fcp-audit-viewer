@@ -17,8 +17,21 @@ vi.mock('../../../src/config/config.js', () => ({
     get: vi.fn().mockImplementation((key) => {
       if (key === 'backend.endpoint') return 'https://__TEST_ENDPOINT__'
       if (key === 'backend.path') return '/api/v1/audit'
+      if (key === 'tracing.header') return 'x-cdp-request-id'
       return undefined
     })
+  }
+}))
+
+const mockGetTraceId = vi.fn()
+vi.mock('@defra/hapi-tracing', () => ({
+  getTraceId: () => mockGetTraceId(),
+  withTraceId: (headerName, headers = {}) => {
+    const traceId = mockGetTraceId()
+    if (traceId) {
+      headers[headerName] = traceId
+    }
+    return headers
   }
 }))
 
@@ -27,6 +40,7 @@ const { getStream } = await import('../../../src/api/get-stream.js')
 describe('getStream', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGetTraceId.mockReturnValue(undefined)
   })
 
   afterEach(() => {
@@ -90,6 +104,35 @@ describe('getStream', () => {
   })
 
   test('does not include X-Audit-User-Id header when userId is not provided', async () => {
+    mockGetToken.mockResolvedValue('Bearer mock-token')
+    const mockRes = { statusCode: HTTP_STATUS_OK }
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
+
+    await getStream('/download')
+
+    expect(Wreck.request).toHaveBeenCalledWith(
+      'GET',
+      expect.any(String),
+      { headers: { Authorization: 'Bearer mock-token' } }
+    )
+  })
+
+  test('includes the tracing header when a trace id is available', async () => {
+    mockGetTraceId.mockReturnValue('trace-id-789')
+    mockGetToken.mockResolvedValue('Bearer mock-token')
+    const mockRes = { statusCode: HTTP_STATUS_OK }
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
+
+    await getStream('/download')
+
+    expect(Wreck.request).toHaveBeenCalledWith(
+      'GET',
+      expect.any(String),
+      { headers: { Authorization: 'Bearer mock-token', 'x-cdp-request-id': 'trace-id-789' } }
+    )
+  })
+
+  test('does not include the tracing header when there is no trace id', async () => {
     mockGetToken.mockResolvedValue('Bearer mock-token')
     const mockRes = { statusCode: HTTP_STATUS_OK }
     vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
