@@ -16,7 +16,7 @@ vi.mock('../../../../../src/common/helpers/logging/logger.js', () => ({
 const { sendAuthEvent } = await import('../../../../../src/common/helpers/audit/audit.js')
 
 const request = { headers: {}, info: { remoteAddress: '127.0.0.1' } }
-const credentials = { oid: 'user-oid-123', sessionId: 'session-id-456' }
+const credentials = { oid: 'user-oid-123', sessionId: 'session-id-456', upn: 'test.user@defra.gov.uk' }
 
 describe('sendAuthEvent', () => {
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe('sendAuthEvent', () => {
 
     expect(mockPublishAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        audit: { entities: [{ entity: 'user', action: 'login' }] }
+        audit: { entities: [{ entity: 'user', action: 'login', entityid: 'test.user@defra.gov.uk' }] }
       }),
       expect.objectContaining({
         sns: { topicArn: 'arn:aws:sns:eu-west-2:000000000000:test-topic' },
