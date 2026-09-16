@@ -14,14 +14,7 @@ function getPublisherConfig () {
     return publisherConfig
   }
 
-  const { region, endpoint, accessKeyId, secretAccessKey } = config.get('aws')
-  snsClient = new SNSClient({
-    region,
-    ...(endpoint && {
-      endpoint,
-      credentials: { accessKeyId, secretAccessKey }
-    })
-  })
+  snsClient = new SNSClient()
   publisherConfig = {
     snsClient,
     sns: { topicArn: config.get('aws.sns.topicArn') },

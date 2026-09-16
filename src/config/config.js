@@ -283,33 +283,6 @@ export const config = convict({
     env: 'ENVIRONMENT'
   },
   aws: {
-    region: {
-      doc: 'AWS region',
-      format: String,
-      default: 'eu-west-2',
-      env: 'AWS_REGION'
-    },
-    endpoint: {
-      doc: 'Custom AWS endpoint, used to target a local AWS emulator such as Floci/LocalStack. Leave unset to use real AWS.',
-      format: String,
-      nullable: true,
-      default: null,
-      env: 'AWS_ENDPOINT_URL'
-    },
-    accessKeyId: {
-      doc: 'AWS access key ID',
-      format: String,
-      nullable: true,
-      default: null,
-      env: 'AWS_ACCESS_KEY_ID'
-    },
-    secretAccessKey: {
-      doc: 'AWS secret access key',
-      format: String,
-      nullable: true,
-      default: null,
-      env: 'AWS_SECRET_ACCESS_KEY'
-    },
     sns: {
       topicArn: {
         doc: 'AWS SNS topic ARN for publishing api access audit events',
