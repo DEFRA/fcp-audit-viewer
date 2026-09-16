@@ -15,14 +15,14 @@ function buildRequest ({ headers = {}, remoteAddress = '127.0.0.1' } = {}) {
 }
 
 describe('buildAuthEvent', () => {
-  const credentials = { oid: 'user-oid-123', sessionId: 'session-id-456' }
+  const credentials = { oid: 'user-oid-123', sessionId: 'session-id-456', upn: 'test.user@defra.gov.uk' }
 
   test('builds a user/login audit event', () => {
     mockGetTraceId.mockReturnValue('trace-id-789')
 
     const event = buildAuthEvent(buildRequest(), 'login', credentials)
 
-    expect(event.audit.entities).toEqual([{ entity: 'user', action: 'login' }])
+    expect(event.audit.entities).toEqual([{ entity: 'user', action: 'login', entityid: 'test.user@defra.gov.uk' }])
     expect(event.user).toBe('AAD/user-oid-123')
     expect(event.sessionid).toBe('session-id-456')
     expect(event.correlationid).toBe('trace-id-789')
@@ -32,7 +32,13 @@ describe('buildAuthEvent', () => {
   test('builds a user/logout audit event', () => {
     const event = buildAuthEvent(buildRequest(), 'logout', credentials)
 
-    expect(event.audit.entities).toEqual([{ entity: 'user', action: 'logout' }])
+    expect(event.audit.entities).toEqual([{ entity: 'user', action: 'logout', entityid: 'test.user@defra.gov.uk' }])
+  })
+
+  test('sets entityid to an empty string when upn is not present', () => {
+    const event = buildAuthEvent(buildRequest(), 'login', { oid: 'user-oid-123', sessionId: 'session-id-456' })
+
+    expect(event.audit.entities).toEqual([{ entity: 'user', action: 'login', entityid: '' }])
   })
 
   test('omits correlationid when there is no trace id', () => {

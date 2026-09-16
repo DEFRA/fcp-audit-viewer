@@ -20,7 +20,7 @@ function buildAuthEvent (request, action, credentials) {
     user: `AAD/${credentials.oid}`,
     sessionid: credentials.sessionId,
     audit: {
-      entities: [{ entity: 'user', action }]
+      entities: [{ entity: 'user', action, entityid: credentials.upn ?? '' }]
     }
   }
 }
