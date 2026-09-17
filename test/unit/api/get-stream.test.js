@@ -17,8 +17,21 @@ vi.mock('../../../src/config/config.js', () => ({
     get: vi.fn().mockImplementation((key) => {
       if (key === 'backend.endpoint') return 'https://__TEST_ENDPOINT__'
       if (key === 'backend.path') return '/api/v1/audit'
+      if (key === 'tracing.header') return 'x-cdp-request-id'
       return undefined
     })
+  }
+}))
+
+const mockGetTraceId = vi.fn()
+vi.mock('@defra/hapi-tracing', () => ({
+  getTraceId: () => mockGetTraceId(),
+  withTraceId: (headerName, headers = {}) => {
+    const traceId = mockGetTraceId()
+    if (traceId) {
+      headers[headerName] = traceId
+    }
+    return headers
   }
 }))
 
@@ -27,6 +40,7 @@ const { getStream } = await import('../../../src/api/get-stream.js')
 describe('getStream', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGetTraceId.mockReturnValue(undefined)
   })
 
   afterEach(() => {
@@ -103,6 +117,35 @@ describe('getStream', () => {
     )
   })
 
+  test('includes the tracing header when a trace id is available', async () => {
+    mockGetTraceId.mockReturnValue('trace-id-789')
+    mockGetToken.mockResolvedValue('Bearer mock-token')
+    const mockRes = { statusCode: HTTP_STATUS_OK }
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
+
+    await getStream('/download')
+
+    expect(Wreck.request).toHaveBeenCalledWith(
+      'GET',
+      expect.any(String),
+      { headers: { Authorization: 'Bearer mock-token', 'x-cdp-request-id': 'trace-id-789' } }
+    )
+  })
+
+  test('does not include the tracing header when there is no trace id', async () => {
+    mockGetToken.mockResolvedValue('Bearer mock-token')
+    const mockRes = { statusCode: HTTP_STATUS_OK }
+    vi.spyOn(Wreck, 'request').mockResolvedValue(mockRes)
+
+    await getStream('/download')
+
+    expect(Wreck.request).toHaveBeenCalledWith(
+      'GET',
+      expect.any(String),
+      { headers: { Authorization: 'Bearer mock-token' } }
+    )
+  })
+
   test('returns response stream on success', async () => {
     mockGetToken.mockResolvedValue('Bearer mock-token')
     const mockRes = { statusCode: HTTP_STATUS_OK, pipe: vi.fn() }
@@ -128,6 +171,26 @@ describe('getStream', () => {
     expect(mockDropToken).toHaveBeenCalledOnce()
     expect(Wreck.request).toHaveBeenCalledTimes(2)
     expect(result).toBe(freshRes)
+  })
+
+  test('retries without an Authorization header when no fresh token is available', async () => {
+    mockGetToken
+      .mockResolvedValueOnce('Bearer stale-token')
+      .mockResolvedValueOnce(null)
+    const staleRes = { statusCode: HTTP_STATUS_UNAUTHORIZED }
+    const freshRes = { statusCode: HTTP_STATUS_OK }
+    vi.spyOn(Wreck, 'request')
+      .mockResolvedValueOnce(staleRes)
+      .mockResolvedValueOnce(freshRes)
+
+    await getStream('/download')
+
+    expect(Wreck.request).toHaveBeenNthCalledWith(
+      2,
+      'GET',
+      expect.any(String),
+      { headers: {} }
+    )
   })
 
   test('does not retry when no token was used on 401', async () => {
