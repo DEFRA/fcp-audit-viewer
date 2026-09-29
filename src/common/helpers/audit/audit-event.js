@@ -12,6 +12,10 @@ function mapEnvironment (cdpEnvironment) {
   return cdpEnvironment === 'local' ? 'local' : `cdp-${cdpEnvironment}`
 }
 
+function getEntityId (credentials) {
+  return credentials.email || credentials.unique_name || credentials.upn || ''
+}
+
 function buildAuthEvent (request, action, credentials) {
   return {
     datetime: new Date().toISOString(),
@@ -20,7 +24,7 @@ function buildAuthEvent (request, action, credentials) {
     user: `AAD/${credentials.oid}`,
     sessionid: credentials.sessionId,
     audit: {
-      entities: [{ entity: 'user', action, entityid: credentials.upn ?? '' }]
+      entities: [{ entity: 'user', action, entityid: getEntityId(credentials) }]
     }
   }
 }
