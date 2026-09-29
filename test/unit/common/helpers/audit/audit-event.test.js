@@ -35,7 +35,25 @@ describe('buildAuthEvent', () => {
     expect(event.audit.entities).toEqual([{ entity: 'user', action: 'logout', entityid: 'test.user@defra.gov.uk' }])
   })
 
-  test('sets entityid to an empty string when upn is not present', () => {
+  test('prefers the email claim for entityid', () => {
+    const event = buildAuthEvent(buildRequest(), 'login', { ...credentials, email: 'email@defra.gov.uk', unique_name: 'unique@defra.gov.uk' })
+
+    expect(event.audit.entities[0].entityid).toBe('email@defra.gov.uk')
+  })
+
+  test('falls back to the unique_name claim when email is not present', () => {
+    const event = buildAuthEvent(buildRequest(), 'login', { ...credentials, unique_name: 'unique@defra.gov.uk' })
+
+    expect(event.audit.entities[0].entityid).toBe('unique@defra.gov.uk')
+  })
+
+  test('falls back to the upn claim when email and unique_name are not present', () => {
+    const event = buildAuthEvent(buildRequest(), 'login', credentials)
+
+    expect(event.audit.entities[0].entityid).toBe('test.user@defra.gov.uk')
+  })
+
+  test('sets entityid to an empty string when no identifying claim is present', () => {
     const event = buildAuthEvent(buildRequest(), 'login', { oid: 'user-oid-123', sessionId: 'session-id-456' })
 
     expect(event.audit.entities).toEqual([{ entity: 'user', action: 'login', entityid: '' }])
