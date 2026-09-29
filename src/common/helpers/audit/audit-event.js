@@ -16,15 +16,17 @@ function getEntityId (credentials) {
   return credentials.email || credentials.unique_name || credentials.upn || ''
 }
 
-function buildAuthEvent (request, action, credentials) {
+function buildAuthEvent (request, action, credentials, { status = 'success', reason } = {}) {
   return {
     datetime: new Date().toISOString(),
     ip: getClientIp(request),
     ...(getTraceId() && { correlationid: getTraceId() }),
-    user: `AAD/${credentials.oid}`,
+    ...(credentials.oid && { user: `AAD/${credentials.oid}` }),
     sessionid: credentials.sessionId,
     audit: {
-      entities: [{ entity: 'user', action, entityid: getEntityId(credentials) }]
+      entities: [{ entity: 'user', action, entityid: getEntityId(credentials) }],
+      status,
+      ...(reason && { details: { reason } })
     }
   }
 }

@@ -30,13 +30,26 @@ describe('sendAuthEvent', () => {
 
     expect(mockPublishAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        audit: { entities: [{ entity: 'user', action: 'login', entityid: 'test.user@defra.gov.uk' }] }
+        audit: { entities: [{ entity: 'user', action: 'login', entityid: 'test.user@defra.gov.uk' }], status: 'success' }
       }),
       expect.objectContaining({
         sns: { topicArn: 'arn:aws:sns:eu-west-2:000000000000:test-topic' },
         application: 'Audit Service',
         component: 'fcp-audit-viewer',
       })
+    )
+  })
+
+  test('publishes a failure event when a failure status is provided', async () => {
+    mockPublishAuditEvent.mockResolvedValue({ messageId: 'message-id' })
+
+    await sendAuthEvent(request, 'login', credentials, { status: 'failure', reason: 'Token verification failed' })
+
+    expect(mockPublishAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({ status: 'failure', details: { reason: 'Token verification failed' } })
+      }),
+      expect.anything()
     )
   })
 

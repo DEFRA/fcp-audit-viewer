@@ -23,6 +23,7 @@ describe('buildAuthEvent', () => {
     const event = buildAuthEvent(buildRequest(), 'login', credentials)
 
     expect(event.audit.entities).toEqual([{ entity: 'user', action: 'login', entityid: 'test.user@defra.gov.uk' }])
+    expect(event.audit.status).toBe('success')
     expect(event.user).toBe('AAD/user-oid-123')
     expect(event.sessionid).toBe('session-id-456')
     expect(event.correlationid).toBe('trace-id-789')
@@ -33,6 +34,7 @@ describe('buildAuthEvent', () => {
     const event = buildAuthEvent(buildRequest(), 'logout', credentials)
 
     expect(event.audit.entities).toEqual([{ entity: 'user', action: 'logout', entityid: 'test.user@defra.gov.uk' }])
+    expect(event.audit.status).toBe('success')
   })
 
   test('prefers the email claim for entityid', () => {
@@ -56,6 +58,26 @@ describe('buildAuthEvent', () => {
   test('sets entityid to an empty string when no identifying claim is present', () => {
     const event = buildAuthEvent(buildRequest(), 'login', { oid: 'user-oid-123', sessionId: 'session-id-456' })
 
+    expect(event.audit.entities).toEqual([{ entity: 'user', action: 'login', entityid: '' }])
+  })
+
+  test('sets status to failure and adds the reason to details', () => {
+    const event = buildAuthEvent(buildRequest(), 'login', credentials, { status: 'failure', reason: 'Token verification failed' })
+
+    expect(event.audit.status).toBe('failure')
+    expect(event.audit.details).toEqual({ reason: 'Token verification failed' })
+  })
+
+  test('omits details when there is no reason', () => {
+    const event = buildAuthEvent(buildRequest(), 'login', credentials, { status: 'failure' })
+
+    expect(event.audit).not.toHaveProperty('details')
+  })
+
+  test('omits user and entityid when there are no credentials', () => {
+    const event = buildAuthEvent(buildRequest(), 'login', {}, { status: 'failure' })
+
+    expect(event).not.toHaveProperty('user')
     expect(event.audit.entities).toEqual([{ entity: 'user', action: 'login', entityid: '' }])
   })
 
