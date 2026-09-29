@@ -27,11 +27,28 @@ function getPublisherConfig () {
   return publisherConfig
 }
 
-async function sendAuthEvent (request, action, credentials) {
+/**
+ * Publish a login or logout audit event to the fcp-audit SNS topic.
+ * Publishing errors are logged and not rethrown, so auditing never blocks the auth flow.
+ *
+ * @param {import('@hapi/hapi').Request} request - Used for the client IP
+ * @param {'login'|'logout'} action - The auth action being audited
+ * @param {object} credentials - Entra token claims / session credentials for the user
+ * @param {string} [credentials.oid] - Entra object id, sent as `AAD/<oid>`
+ * @param {string} [credentials.sessionId] - Session id, sent as `sessionid`
+ * @param {string} [credentials.email] - Preferred claim for the audit `entityid`
+ * @param {string} [credentials.unique_name] - Fallback claim for the audit `entityid`
+ * @param {string} [credentials.upn] - Last fallback claim for the audit `entityid`
+ * @param {object} [options]
+ * @param {'success'|'failure'} [options.status='success'] - Outcome of the action
+ * @param {string} [options.reason] - Failure reason, sent as `audit.details.reason`
+ * @returns {Promise<void>}
+ */
+async function sendAuthEvent (request, action, credentials, options) {
   try {
-    const event = buildAuthEvent(request, action, credentials)
+    const event = buildAuthEvent(request, action, credentials, options)
     const { messageId } = await publishAuditEvent(event, getPublisherConfig())
-    logger.info(`Audit event published: messageId=${messageId}, action=${action}`)
+    logger.info(`Audit event published: messageId=${messageId}, action=${action}, status=${event.audit.status}`)
   } catch (err) {
     logger.error(err, `Failed to publish ${action} audit event`)
   }
