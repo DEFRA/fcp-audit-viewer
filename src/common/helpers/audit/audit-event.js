@@ -21,7 +21,7 @@ function buildAuthEvent (request, action, credentials, { status = 'success', rea
     datetime: new Date().toISOString(),
     ip: getClientIp(request),
     ...(getTraceId() && { correlationid: getTraceId() }),
-    user: `AAD/${credentials.oid}`,
+    ...(credentials.oid && { user: `AAD/${credentials.oid}` }),
     sessionid: credentials.sessionId,
     audit: {
       entities: [{ entity: 'user', action, entityid: getEntityId(credentials) }],

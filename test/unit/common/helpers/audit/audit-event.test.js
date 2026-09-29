@@ -74,6 +74,13 @@ describe('buildAuthEvent', () => {
     expect(event.audit).not.toHaveProperty('details')
   })
 
+  test('omits user and entityid when there are no credentials', () => {
+    const event = buildAuthEvent(buildRequest(), 'login', {}, { status: 'failure' })
+
+    expect(event).not.toHaveProperty('user')
+    expect(event.audit.entities).toEqual([{ entity: 'user', action: 'login', entityid: '' }])
+  })
+
   test('omits correlationid when there is no trace id', () => {
     mockGetTraceId.mockReturnValue(undefined)
 

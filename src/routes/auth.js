@@ -24,12 +24,18 @@ export const auth = [{
     // This should only occur if the user tries to access the sign-in page directly and not part of the sign-in flow
     // eg if the user has bookmarked the Entra sign-in page or they have signed out and tried to go back in the browser
     if (!request.auth.isAuthenticated) {
+      await sendAuthEvent(request, 'login', {}, { status: 'failure', reason: request.auth.error?.message })
       return h.view('errors/unauthorised')
     }
 
     const { profile, token, refreshToken } = request.auth.credentials
     // verify token returned from Entra against public key
-    await verifyToken(token)
+    try {
+      await verifyToken(token)
+    } catch (err) {
+      await sendAuthEvent(request, 'login', profile, { status: 'failure', reason: err.message })
+      throw err
+    }
 
     const { roles } = profile
     // Store token and all useful data in the session cache
@@ -61,18 +67,24 @@ export const auth = [{
   },
   handler: async function (request, h) {
     if (request.auth.isAuthenticated) {
-      await sendAuthEvent(request, 'logout', request.auth.credentials)
+      const { credentials } = request.auth
 
-      if (request.auth.credentials?.sessionId) {
-        // Clear the session cache before redirecting to Entra to clear SSO session
-        await request.server.app.cache.drop(request.auth.credentials.sessionId)
+      try {
+        if (credentials?.sessionId) {
+          // Clear the session cache before redirecting to Entra to clear SSO session
+          await request.server.app.cache.drop(credentials.sessionId)
+        }
+
+        // Clear local session cookie
+        request.cookieAuth.clear()
+
+        const signOutUrl = await getSignOutUrl(request, credentials.loginHint)
+        await sendAuthEvent(request, 'logout', credentials)
+        return h.redirect(signOutUrl)
+      } catch (err) {
+        await sendAuthEvent(request, 'logout', credentials, { status: 'failure', reason: err.message })
+        throw err
       }
-
-      // Clear local session cookie
-      request.cookieAuth.clear()
-
-      const signOutUrl = await getSignOutUrl(request, request.auth.credentials.loginHint)
-      return h.redirect(signOutUrl)
     }
 
     // If not authenticated just redirect to home page
@@ -87,7 +99,12 @@ export const auth = [{
   handler: async function (request, h) {
     if (request.auth.isAuthenticated) {
       // verify state parameter to prevent CSRF attacks
-      validateState(request, request.query.state)
+      try {
+        validateState(request, request.query.state)
+      } catch (err) {
+        await sendAuthEvent(request, 'logout', request.auth.credentials, { status: 'failure', reason: err.message })
+        throw err
+      }
 
       // Clear session as a fail safe as should already be cleared in /auth/sign-out
       if (request.auth.credentials?.sessionId) {

@@ -133,6 +133,7 @@ describe('auth routes', () => {
       bellSimulatedServer.stop()
 
       expect(response.request.response.source.template).toBe('errors/unauthorised')
+      expect(mockSendAuthEvent).toHaveBeenCalledWith(expect.anything(), 'login', {}, expect.objectContaining({ status: 'failure' }))
     })
 
     test('should verify JWT token against public key', async () => {
@@ -160,6 +161,22 @@ describe('auth routes', () => {
       })
       expect(response.statusCode).toBe(HTTP_STATUS_INTERNAL_SERVER_ERROR)
       expect(response.request.response.source.template).toBe('errors/500')
+    })
+
+    test('should publish a failed login audit event if token verification fails', async () => {
+      mockVerifyToken.mockImplementationOnce(() => {
+        throw new Error('Token verification failed')
+      })
+
+      await server.inject({
+        url: path,
+        auth: {
+          strategy: 'entra',
+          credentials
+        }
+      })
+      expect(mockSendAuthEvent).toHaveBeenCalledTimes(1)
+      expect(mockSendAuthEvent).toHaveBeenCalledWith(expect.anything(), 'login', credentials.profile, { status: 'failure', reason: 'Token verification failed' })
     })
 
     test('should set authentication status in session cache', async () => {
@@ -308,6 +325,22 @@ describe('auth routes', () => {
       expect(response.request.response.source.template).toBe('errors/500')
     })
 
+    test('should publish a failed logout audit event if unable to get sign out url', async () => {
+      mockGetSignOutUrl.mockImplementationOnce(() => {
+        throw new Error('Unable to get sign out url')
+      })
+
+      await server.inject({
+        url: path,
+        auth: {
+          strategy: 'session',
+          credentials
+        }
+      })
+      expect(mockSendAuthEvent).toHaveBeenCalledTimes(1)
+      expect(mockSendAuthEvent).toHaveBeenCalledWith(expect.anything(), 'logout', credentials, { status: 'failure', reason: 'Unable to get sign out url' })
+    })
+
     test('should redirect to oidc sign out url when authenticated without sessionId', async () => {
       const response = await server.inject({
         url: path,
@@ -353,6 +386,32 @@ describe('auth routes', () => {
       })
       expect(response.statusCode).toBe(HTTP_STATUS_INTERNAL_SERVER_ERROR)
       expect(response.request.response.source.template).toBe('errors/500')
+    })
+
+    test('should publish a failed logout audit event if state validation fails', async () => {
+      mockValidateState.mockImplementationOnce(() => {
+        throw new Error('State validation failed')
+      })
+
+      await server.inject({
+        url: `${path}?state=state`,
+        auth: {
+          strategy: 'session',
+          credentials
+        }
+      })
+      expect(mockSendAuthEvent).toHaveBeenCalledWith(expect.anything(), 'logout', credentials, { status: 'failure', reason: 'State validation failed' })
+    })
+
+    test('should not publish an audit event if state validation succeeds', async () => {
+      await server.inject({
+        url: `${path}?state=state`,
+        auth: {
+          strategy: 'session',
+          credentials
+        }
+      })
+      expect(mockSendAuthEvent).not.toHaveBeenCalled()
     })
 
     test('should not validate state if unauthenticated', async () => {
