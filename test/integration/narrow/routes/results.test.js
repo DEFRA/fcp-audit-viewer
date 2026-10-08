@@ -155,6 +155,28 @@ describe('Results route', () => {
     expect(calledPath).toContain('details.caseid')
   })
 
+  test('download and pagination links for a customField condition pass route validation', async () => {
+    mockGet.mockResolvedValueOnce({ ...mockResponse, meta: { page: 1, pageSize: 1, total: 3 } })
+    const auth = { strategy: 'session', credentials: { scope: ['Audit.View'], sessionId: 'test-session-id' } }
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/results?pageSize=1&conditions%5B0%5D%5BcustomField%5D=caseid&conditions%5B0%5D%5Boperator%5D=eq&conditions%5B0%5D%5Bvalue%5D=foo',
+      auth
+    })
+    const page = cheerio.load(res.payload)
+    const downloadHref = page('a[href^="/download?"]').attr('href')
+    const nextHref = page('a[href^="/results?"][href*="page=2"]').first().attr('href')
+
+    expect(decodeURIComponent(downloadHref)).toContain('[customField]=caseid')
+    expect(decodeURIComponent(downloadHref)).not.toContain('details.caseid')
+
+    mockGet.mockResolvedValueOnce(mockResponse)
+    const nextRes = await server.inject({ method: 'GET', url: nextHref, auth })
+    expect(nextRes.statusCode).toBe(httpConstants.HTTP_STATUS_OK)
+    expect(mockGet.mock.calls.at(-1)[0]).toContain('details.caseid')
+  })
+
   test('Conditions missing required fields are stripped before calling API', async () => {
     mockGet.mockResolvedValueOnce(mockResponse)
 
