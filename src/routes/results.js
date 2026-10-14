@@ -55,15 +55,17 @@ export const results = {
   },
   handler: async function (request, h) {
     const { page, pageSize } = request.query
-    let conditions = request.query.conditions
+
+    // Keep only complete conditions, in the shape this route (and /download) accepts,
+    // so they can be safely round-tripped in pagination and download links
+    const linkConditions = request.query.conditions
+      .filter((c) => (c.field || c.customField) && c.operator && c.value !== undefined)
+      .map(({ field, customField, operator, value }) =>
+        field ? { field, operator, value } : { customField, operator, value })
 
     // no-JS custom property fallback: conditions[N][customField] -> details.<customField>
-    // Strip customField from all conditions before forwarding to the API
-    conditions = conditions.map((c) => {
-      const { customField, field, ...rest } = c
-      const resolvedField = (!field && customField) ? `details.${customField}` : field
-      return { field: resolvedField, ...rest }
-    }).filter((c) => c.field && c.operator && c.value !== undefined)
+    const conditions = linkConditions.map(({ field, customField, ...rest }) =>
+      ({ field: field ?? `details.${customField}`, ...rest }))
 
     try {
       const queryString = qs.stringify({ conditions, page, pageSize })
@@ -73,17 +75,17 @@ export const results = {
       const totalPages = total > 0 ? Math.ceil(total / pageSize) : 1
 
       const prevUrl = page > 1
-        ? '/results?' + qs.stringify({ conditions, pageSize, page: page - 1 })
+        ? '/results?' + qs.stringify({ conditions: linkConditions, pageSize, page: page - 1 })
         : null
 
       const nextUrl = page * pageSize < total
-        ? '/results?' + qs.stringify({ conditions, pageSize, page: page + 1 })
+        ? '/results?' + qs.stringify({ conditions: linkConditions, pageSize, page: page + 1 })
         : null
 
-      const pages = buildPaginationItems(page, totalPages, conditions, pageSize)
+      const pages = buildPaginationItems(page, totalPages, linkConditions, pageSize)
 
       const downloadUrl = total > 0
-        ? '/download?' + qs.stringify({ conditions })
+        ? '/download?' + qs.stringify({ conditions: linkConditions })
         : null
 
       const referrer = request.info.referrer
