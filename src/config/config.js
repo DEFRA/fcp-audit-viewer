@@ -10,6 +10,7 @@ const oneWeekMs = 604800000
 const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
 const isDevelopment = process.env.NODE_ENV === 'development'
+const isCdpEnvironment = Boolean(process.env.ENVIRONMENT) && process.env.ENVIRONMENT !== 'local'
 
 convict.addFormats(convictFormatWithValidator)
 
@@ -97,12 +98,30 @@ export const config = convict({
         : []
     }
   },
-  httpProxy: {
-    doc: 'HTTP Proxy',
-    format: String,
-    nullable: true,
-    default: null,
-    env: 'HTTP_PROXY'
+  // Outbound traffic must go through the proxy in CDP, so these are only optional locally.
+  // None are read by the service: Node.js uses them directly.
+  proxy: {
+    httpsProxy: {
+      doc: 'Outbound proxy URL, required in CDP environments (set via cdp-app-config)',
+      format: String,
+      nullable: !isCdpEnvironment,
+      default: null,
+      env: 'HTTPS_PROXY'
+    },
+    useEnvProxy: {
+      doc: 'Enables Node.js native proxy support, without which HTTPS_PROXY is ignored. Node.js only accepts "1". Required in CDP environments (set via cdp-app-config)',
+      format: ['1'],
+      nullable: !isCdpEnvironment,
+      default: null,
+      env: 'NODE_USE_ENV_PROXY'
+    },
+    noProxy: {
+      doc: 'Comma separated hosts that bypass the outbound proxy, e.g. SNS. Required in CDP environments (set via cdp-app-config)',
+      format: String,
+      nullable: !isCdpEnvironment,
+      default: null,
+      env: 'NO_PROXY'
+    }
   },
   isSecureContextEnabled: {
     doc: 'Enable Secure Context',
