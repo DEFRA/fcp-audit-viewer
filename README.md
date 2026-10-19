@@ -58,6 +58,33 @@ npm run docker:test:watch
 
 > Do not run `npm test` directly — environment configuration is only set correctly when running via Docker.
 
+### Outbound proxy tests
+
+In CDP all outbound traffic must go through a Squid proxy. The service uses Node.js native proxy support
+(`NODE_USE_ENV_PROXY`), which only applies to the global HTTP agents. `@hapi/wreck` (used directly, and by
+`@hapi/bell` and `@hapi/jwt`) creates its own agents, so `setupProxy()` points Wreck at the global agents.
+
+`compose.proxy.yml` extends the test setup with a Squid proxy (configured by `test/proxy/squid.conf`). The service,
+Redis and Floci sit on an internal network with no route out, so any request that bypasses the proxy fails rather
+than silently succeeding.
+
+The service fetches the Entra OIDC config on startup and exits if startup fails. `npm run docker:test:proxy` starts
+the service and waits for its `/health` healthcheck, so it passes only if that lookup succeeded through the proxy.
+On failure the service logs are printed, and the stack is torn down either way.
+
+```bash
+# requires internet access to login.microsoftonline.com
+npm run docker:test:proxy
+```
+
+The following must be set in CDP environments (via cdp-app-config), or the service fails config validation at startup:
+
+| Variable | Description |
+|----------|-------------|
+| `NODE_USE_ENV_PROXY` | Enables Node.js native proxy support for `HTTPS_PROXY`/`NO_PROXY`, must be `1` |
+| `HTTPS_PROXY` | Outbound proxy URL for HTTPS requests |
+| `NO_PROXY` | Hosts that bypass the outbound proxy, e.g. SNS |
+
 ### npm scripts
 
 All available npm scripts can be seen in [package.json](./package.json)

@@ -96,8 +96,15 @@ describe('startServer', () => {
   })
 
   describe('When server start fails', () => {
+    let processExitSpy
+
     beforeAll(() => {
       createServerSpy.mockRejectedValue(new Error('Server failed to start'))
+      processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {})
+    })
+
+    afterAll(() => {
+      processExitSpy.mockRestore()
     })
 
     test('Should log failed startup message', async () => {
@@ -107,6 +114,12 @@ describe('startServer', () => {
       expect(mockLoggerError).toHaveBeenCalledWith(
         Error('Server failed to start')
       )
+    })
+
+    test('Should exit the process with a failure code', async () => {
+      await startServerImport.startServer()
+
+      expect(processExitSpy).toHaveBeenCalledWith(1)
     })
   })
 })
