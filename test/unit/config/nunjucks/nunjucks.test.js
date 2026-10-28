@@ -275,7 +275,7 @@ describe('nunjucks detailsRows filter', () => {
     const details = {
       notificationmessageid: 'b1ea9651-907f-47e5-981d-cfc68be946c2',
       code: 'frps-private-beta',
-      identifiers: { sbi: '106284736', frn: '7282807759' },
+      identifiers: { sbi: '806284736', frn: '8282807759' },
       status: 'offered',
       payment: {
         agreementstartdate: '2026-05-01',
@@ -304,7 +304,7 @@ describe('nunjucks detailsRows filter', () => {
     // Object → details element
     const identifiersRow = rows.find((r) => r.key.text === 'identifiers')
     expect(identifiersRow.value.html).toContain('View identifiers')
-    expect(identifiersRow.value.html).toContain('106284736')
+    expect(identifiersRow.value.html).toContain('806284736')
 
     // Nested object with nested object and array
     const paymentRow = rows.find((r) => r.key.text === 'payment')
