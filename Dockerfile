@@ -13,7 +13,7 @@ ARG PORT_DEBUG
 ENV PORT=${PORT}
 EXPOSE ${PORT} ${PORT_DEBUG}
 
-COPY --chown=node:node --chmod=755 package*.json ./
+COPY --chown=node:node --chmod=755 package*.json .npmrc ./
 RUN npm install
 COPY --chown=node:node --chmod=755 . .
 RUN npm run build:frontend
