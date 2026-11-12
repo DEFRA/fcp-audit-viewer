@@ -256,7 +256,7 @@ describe('nunjucks detailsRows filter', () => {
     const rows = detailsRows({
       code: 'GRANT-001',
       status: 'active',
-      identifiers: { sbi: '123456789', frn: '9876543210' },
+      identifiers: { sbi: '812345678', frn: '9876543211' },
       tags: ['alpha', 'beta'],
       payment: { amount: 5000, currency: 'GBP' }
     })
@@ -275,7 +275,7 @@ describe('nunjucks detailsRows filter', () => {
     const details = {
       notificationmessageid: 'b1ea9651-907f-47e5-981d-cfc68be946c2',
       code: 'frps-private-beta',
-      identifiers: { sbi: '806284736', frn: '8282807759' },
+      identifiers: { sbi: '806284736', frn: '9282807759' },
       status: 'offered',
       payment: {
         agreementstartdate: '2026-05-01',
