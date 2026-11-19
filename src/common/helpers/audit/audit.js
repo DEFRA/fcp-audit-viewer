@@ -54,4 +54,4 @@ async function sendAuthEvent (request, action, credentials, options) {
   }
 }
 
-export { sendAuthEvent }
+export { sendAuthEvent, getPublisherConfig }

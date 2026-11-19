@@ -24,6 +24,7 @@ describe('#buildRedisClient', () => {
     test('Should instantiate a single Redis client', () => {
       expect(Redis).toHaveBeenCalledWith({
         db: 0,
+        enableReadyCheck: false,
         host: 'redis',
         keyPrefix: 'fcp-audit-viewer:',
         port: 6379
@@ -48,7 +49,7 @@ describe('#buildRedisClient', () => {
         {
           dnsLookup: expect.any(Function),
           keyPrefix: 'fcp-audit-viewer:',
-          redisOptions: { db: 0, password: 'pass', tls: {}, username: 'user' },
+          redisOptions: { db: 0, enableReadyCheck: false, password: 'pass', tls: {}, username: 'user' },
           slotsRefreshTimeout: 10000
         }
       )
