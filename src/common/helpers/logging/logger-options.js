@@ -1,4 +1,5 @@
 import { ecsFormat } from '@elastic/ecs-pino-format'
+import pretty from 'pino-pretty'
 import { getTraceId } from '@defra/hapi-tracing'
 import { config } from '../../../config/config.js'
 
@@ -13,7 +14,10 @@ const formatters = {
       serviceName
     })
   },
-  'pino-pretty': { transport: { target: 'pino-pretty' } }
+  // A stream in the main thread, not a `transport` (worker thread): under `node --watch`
+  // the worker posts `watch:import` messages that thread-stream rejects as fatal errors.
+  // Synchronous, so the error logged just before a failed start-up's process.exit is not lost.
+  'pino-pretty': { stream: pretty({ sync: true }) }
 }
 
 export const loggerOptions = {

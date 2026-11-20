@@ -24,6 +24,9 @@ export function buildRedisClient (redisConfig) {
           password: redisConfig.password
         }
   const tls = redisConfig.useTLS ? { tls: {} } : {}
+  // The ready check runs INFO, which the CDP ElastiCache user is not permitted to run
+  // (NOPERM), so ioredis logs a warning and skips it on every connection anyway.
+  const enableReadyCheck = false
 
   if (redisConfig.useSingleInstanceCache) {
     redisClient = new Redis({
@@ -31,6 +34,7 @@ export function buildRedisClient (redisConfig) {
       host,
       db,
       keyPrefix,
+      enableReadyCheck,
       ...credentials,
       ...tls
     })
@@ -48,6 +52,7 @@ export function buildRedisClient (redisConfig) {
         dnsLookup: (address, callback) => callback(null, address),
         redisOptions: {
           db,
+          enableReadyCheck,
           ...credentials,
           ...tls
         }

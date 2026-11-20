@@ -8,6 +8,9 @@ services:
       ENTRA_TENANT_ID: test-tenant-id
       ENTRA_CLIENT_ID: test-client-id
       ENTRA_CLIENT_SECRET: test-client-secret
+      # Dummy Entra credentials and no fcp-audit backend, so start-up health checks would fail.
+      # Also inherited by compose.proxy.yml, which only exercises the auth plugin's OIDC lookup.
+      HEALTH_CHECKS_ENABLED: false
     volumes:
       - ./test:/home/node/test
       - ./coverage:/home/node/coverage

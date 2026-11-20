@@ -275,6 +275,20 @@ export const config = convict({
       env: 'REDIS_TTL'
     }
   },
+  healthCheck: {
+    enabled: {
+      doc: 'Run start-up health checks against dependent services, exiting if any fail',
+      format: Boolean,
+      default: true,
+      env: 'HEALTH_CHECKS_ENABLED'
+    },
+    timeoutMs: {
+      doc: 'Timeout in milliseconds for each start-up health check request',
+      format: 'nat',
+      default: 5000,
+      env: 'HEALTH_CHECK_TIMEOUT_MS'
+    }
+  },
   cdpEnvironment: {
     doc: 'The CDP environment the app is running in. With the addition of "local" for local development',
     format: [
