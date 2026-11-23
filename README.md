@@ -105,6 +105,18 @@ To update dependencies use [npm-check-updates](https://github.com/raineorshine/n
 ncu --interactive --format group
 ```
 
+## Encrypted cookies
+
+The viewer encrypts its cookies with one secret, `COOKIE_PASSWORD` (`cookie.password` in [src/config/config.js](./src/config/config.js)). It is used in three places:
+
+- the sign-in cookie ([`@hapi/cookie`](https://hapi.dev/module/cookie/), in [src/plugins/auth.js](./src/plugins/auth.js)). It holds only a session ID. The user's session, including their tokens, is kept in Redis ([src/routes/auth.js](./src/routes/auth.js)).
+- the Entra sign-in flow ([`@hapi/bell`](https://hapi.dev/module/bell/), in [src/plugins/auth.js](./src/plugins/auth.js)).
+- the temporary session cookie ([`@hapi/yar`](https://hapi.dev/module/yar/), in [src/plugins/session.js](./src/plugins/session.js)). It holds only an ID. The data, such as where to send the user after sign-in, is kept in Redis.
+
+The password must be at least 32 characters. Locally, Docker Compose sets one in [compose.yml](./compose.yml).
+
+Nothing is stored long term under this password, so it can be replaced with a new one at any time, for example when recovering an environment. Existing cookies can then no longer be read, so users are sent to sign in again.
+
 ## SonarQube Cloud
 
 Instructions for setting up SonarQube Cloud can be found in [sonar-project.properties](./sonar-project.properties).
